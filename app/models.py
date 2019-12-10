@@ -1,6 +1,6 @@
+from typing import Optional
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy.dialects.mssql import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT
-
 from app.utils.helpers import db
 from app.utils.strings import get_unix_time_tuple
 
@@ -21,6 +21,16 @@ class BaseModel():
     可以提供一些基本的功能
     """
 
+    def save(self, commit=False):
+        """  保存模型到数据库
+
+        Args:
+            commit: 是否立即提交
+        """
+        db.session.add(self)
+        if commit:
+            db.session.commit()
+
 
 @addModel
 class User(db.Model, BaseModel):
@@ -40,20 +50,10 @@ class User(db.Model, BaseModel):
     # 用户状态
     status = Column(SMALLINT, default=0, doc='用户状态', comment='0 未激活 1 正常 2...')
 
-
-@addModel
-class UserToken(db.Model, BaseModel):
-    """ 用户与token之间的关联表 """
-    __tablename__ = 'bao_user_token'
-
-    user_id = Column(INTEGER, Sequence(start=1, increment=1,
-                                       name="file_id_sep"), primary_key=True, autoincrement=True, doc='用户主键',
-                     comment='用户主键，需要关联用户的token')
-    user_token = Column(String(64), nullable=True,
-                        doc='用户token', comment='会根据最后的登录信息，更新用户的token')
-    update_time = Column(String(11), nullable=True,
-                         doc='更新时间', comment='每次变更都会更新此值')
-
+    def __init__(self, email: str, password: str, status: int=1):
+        self.status = status
+        self.email = email
+        self.password = password
 
 @addModel
 class LoginRecord(db.Model, BaseModel):
@@ -66,6 +66,11 @@ class LoginRecord(db.Model, BaseModel):
     user_id = Column(INTEGER)
     login_time = Column(String(20), nullable=True, comment='登录时间')
     log_ip = Column(String(20), nullable=True, comment='登录ip')
+
+    def __init__(self, user_id: int, login_time: str=None, ip: str=None):
+        self.user_id = user_id
+        self.log_ip = ip
+        self.login_time = login_time
 
 
 @addModel
