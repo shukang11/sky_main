@@ -16,4 +16,4 @@ ENV PORT 8000
 
 EXPOSE 8000 5000
 
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", " --log-level=debug", "manager:application"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "manager:application"]
