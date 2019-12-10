@@ -1,6 +1,7 @@
 from flask import request, current_app, g
 from ..views import api
 from app.utils.errors import UserError
+from app.utils.response import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.models import User, db
 
@@ -23,3 +24,8 @@ def register():
     payload = {}
     payload['user_id'] = user.id
     return response_succ(body=payload)
+
+@api.route('/test', methods=['GET', 'POST'])
+def hello():
+    params = request.values or request.get_json() or {}
+    return response_succ(body=params)
