@@ -1,17 +1,16 @@
-from typing import AnyStr, Tuple, ClassVar
+from typing import AnyStr, Tuple
 import os
 from flask import Flask, Blueprint
-from flask_uploads import configure_uploads
 from config import configInfo, Config, root_dir
-from app.utils.helpers import db
+from app.utils.helpers import db, configure_uploads, fileStorage
 
 __all__ = ['create_app', 'fetch_route']
 
-route_list: Tuple[ClassVar, AnyStr] = []
+route_list: Tuple[Blueprint, AnyStr] = []
 
 def fetch_route(blueprint: Blueprint, prefix: AnyStr):
-    t: Tuple[ClassVar, AnyStr] = (blueprint, prefix)
-    route_list.app(t)
+    t: Tuple[Blueprint, AnyStr] = (blueprint, prefix)
+    route_list.append(t)
 
 def regist_blueprint(app: Flask, src_floder: AnyStr):
     app_dir = os.path.join(root_dir, src_floder)
@@ -24,6 +23,7 @@ def regist_blueprint(app: Flask, src_floder: AnyStr):
             __import__('app.' + routes)
     
     for blueprint in route_list:
+        print(blueprint)
         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
 def create_app(env: AnyStr) -> Flask:
@@ -34,6 +34,6 @@ def create_app(env: AnyStr) -> Flask:
     config_obj.init_app(app)
     # 插件注册
     db.init_app(app)
-    configure_uploads(app)
+    configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')
     return app
