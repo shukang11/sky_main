@@ -1,13 +1,17 @@
-from typing import AnyStr
+from typing import AnyStr, Tuple, ClassVar
 import os
-from flask import Flask
+from flask import Flask, Blueprint
 from flask_uploads import configure_uploads
 from config import configInfo, Config, root_dir
 from app.utils.helpers import db
 
-__all__ = ['create_app']
+__all__ = ['create_app', 'fetch_route']
 
-route_list = []
+route_list: Tuple[ClassVar, AnyStr] = []
+
+def fetch_route(blueprint: Blueprint, prefix: AnyStr):
+    t: Tuple[ClassVar, AnyStr] = (blueprint, prefix)
+    route_list.app(t)
 
 def regist_blueprint(app: Flask, src_floder: AnyStr):
     app_dir = os.path.join(root_dir, src_floder)
@@ -20,10 +24,7 @@ def regist_blueprint(app: Flask, src_floder: AnyStr):
             __import__('app.' + routes)
     
     for blueprint in route_list:
-        if blueprint[1] is not None:
-            app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
-        else:
-            app.register_blueprint(blueprint[0])
+        app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
 def create_app(env: AnyStr) -> Flask:
     assert(type(env) is str)
