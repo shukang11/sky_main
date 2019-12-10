@@ -8,6 +8,12 @@ from app.utils.strings import get_unix_time_tuple
 doc: http://docs.jinkan.org/docs/flask-sqlalchemy/models.html
 """
 
+__all__ = []
+
+
+def addModel(model):
+    __all__.append(model.__name__)
+
 
 class BaseModel():
     """
@@ -16,6 +22,7 @@ class BaseModel():
     """
 
 
+@addModel
 class User(db.Model, BaseModel):
     """ 用户信息表 """
     __tablename__ = "bao_user"
@@ -34,6 +41,7 @@ class User(db.Model, BaseModel):
     status = Column(SMALLINT, default=0, doc='用户状态', comment='0 未激活 1 正常 2...')
 
 
+@addModel
 class UserToken(db.Model, BaseModel):
     """ 用户与token之间的关联表 """
     __tablename__ = 'bao_user_token'
@@ -47,6 +55,20 @@ class UserToken(db.Model, BaseModel):
                          doc='更新时间', comment='每次变更都会更新此值')
 
 
+@addModel
+class LoginRecord(db.Model, BaseModel):
+    """ 登录记录表 """
+
+    __tablename__ = "bao_login_record"
+
+    record_id = Column(INTEGER, Sequence(start=1, increment=1,
+                                         name="record_id_sep"), primary_key=True, autoincrement=True)
+    user_id = Column(INTEGER)
+    login_time = Column(String(20), nullable=True, comment='登录时间')
+    log_ip = Column(String(20), nullable=True, comment='登录ip')
+
+
+@addModel
 class FileModel(db.Model, BaseModel):
     """ 文件映射表 """
 
@@ -62,6 +84,7 @@ class FileModel(db.Model, BaseModel):
                        doc='文件类型', comment='指的是文件的mimetype')
 
 
+@addModel
 class FileUserModel(db.Model, BaseModel):
     """ 文件与用户映射 """
     __tablename__ = "bao_file_user"
@@ -71,7 +94,8 @@ class FileUserModel(db.Model, BaseModel):
     user_id = Column(INTEGER, nullable=False, comment='用户id')
     file_id = Column(INTEGER, nullable=False, comment='文件id')
     add_time = Column(String(20), nullable=True, comment='创建时间')
-    file_user_state = Column(SMALLINT, default=1, nullable=True, comment='0 创建 1 损坏或丢失')
+    file_user_state = Column(
+        SMALLINT, default=1, nullable=True, comment='0 创建 1 损坏或丢失')
 
     def __init__(self, user_id: int, file_id: int, add_time: str = None):
         self.user_id = user_id
