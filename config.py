@@ -55,7 +55,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:12345678@mysql:3306/sky_main_dev'
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(root_dir, 'data-dev.sqlite')
     SERVICE_TOKEN_SUFFIX = 'im_token_suffix'
     # 打开数据库语句输出
@@ -71,6 +71,7 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:12345678@mysql:3306/sky_main'
     DEBUG = False
 
 configInfo = {

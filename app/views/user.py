@@ -1,9 +1,10 @@
-from typing import Optional, AnyStr
+from typing import Optional, AnyStr, Dict
 from flask import request, current_app, g
 from ..views import api
 from app.utils.errors import UserError
 from app.utils.response import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
+from app.utils import redisClient
 from app.models import db, User, LoginRecord, User
 
 
@@ -30,7 +31,8 @@ def login():
     params = request.values or request.get_json() or {}
     email: str = params.get("email")
     password: str = params.get("password")
-    if exsist_user: User := db.session.query(User).filter_by(email=email, password=password).first():
+    exsist_user: User = db.session.query(User).filter_by(email=email, password=password).first()
+    if exsist_user:
         # update log time
         login_time: str = get_unix_time_tuple()
         log_ip: str = request.args.get("user_ip") or request.remote_addr
@@ -51,8 +53,9 @@ def logout():
     """
     pass
 
-
 @api.route('/test', methods=['GET', 'POST'])
 def hello():
-    params = request.values or request.get_json() or {}
+    params: Dict[AnyStr, any] = dict(request.values or request.get_json() or {})
+    redisClient.incr('/test')
+    params['hits'] = int(redisClient.get('/test'))
     return response_succ(body=params)

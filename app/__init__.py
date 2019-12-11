@@ -2,7 +2,8 @@ from typing import AnyStr, Tuple
 import os
 from flask import Flask, Blueprint
 from config import configInfo, Config, root_dir
-from app.utils.helpers import db, configure_uploads, fileStorage
+from app.utils import db, configure_uploads, fileStorage
+
 
 __all__ = ['create_app', 'fetch_route']
 

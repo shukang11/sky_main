@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy.dialects.mssql import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT
-from app.utils.helpers import db
+from app.utils import db
 from app.utils.strings import get_unix_time_tuple
 
 """
