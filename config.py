@@ -3,10 +3,13 @@ import logging
 
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'mysql+pymysql://root:12345678@mysql:3000/sky_main')
+
 class Config:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get('SECRET_KEY') or os.urandom(24)
     """SQLALCHEMY配置"""
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_COMMIT_ON_TEARDOWN = False
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
@@ -55,8 +58,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:12345678@mysql:3306/sky_main_dev'
-    # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(root_dir, 'data-dev.sqlite')
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SERVICE_TOKEN_SUFFIX = 'im_token_suffix'
     # 打开数据库语句输出
     SQLALCHEMY_ECHO = True
@@ -71,7 +73,6 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:12345678@mysql:3306/sky_main'
     DEBUG = False
 
 configInfo = {

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, TypeVar, Generic
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy.dialects.mssql import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT
 from app.utils import db
@@ -14,8 +14,8 @@ __all__ = []
 def addModel(model):
     __all__.append(model.__name__)
 
-
-class BaseModel():
+T = TypeVar('T')
+class BaseModel(Generic[T]):
     """
     基类，在此封装一层
     可以提供一些基本的功能
@@ -38,7 +38,7 @@ class User(db.Model, BaseModel):
     __tablename__ = "bao_user"
 
     id = Column(INTEGER, Sequence(start=1, increment=1,
-                                  name="file_id_sep"), primary_key=True, doc='主键', comment='主键')
+                                  name="user_id_sep"), primary_key=True, doc='主键', comment='主键')
     # 性别
     isMan = Column(SMALLINT, default=0, doc='性别', comment=' 0 未设置 1 男性 2 女性')
     # 邮箱
@@ -55,6 +55,16 @@ class User(db.Model, BaseModel):
         self.email = email
         self.password = password
 
+    @classmethod
+    def get_user(cls, uid: int) -> Optional[BaseModel]:
+        """  通过用户id获得用户实例
+        Args:
+            uid: 用户id
+        Return:
+            如果没有找到用户实例，会返回None
+        """
+        return db.session.query(User).filter_by(id=uid).first()
+
 @addModel
 class LoginRecord(db.Model, BaseModel):
     """ 登录记录表 """
@@ -62,7 +72,7 @@ class LoginRecord(db.Model, BaseModel):
     __tablename__ = "bao_login_record"
 
     record_id = Column(INTEGER, Sequence(start=1, increment=1,
-                                         name="record_id_sep"), primary_key=True, autoincrement=True)
+                                         name="login_record_id_sep"), primary_key=True, autoincrement=True)
     user_id = Column(INTEGER)
     login_time = Column(String(20), nullable=True, comment='登录时间')
     log_ip = Column(String(20), nullable=True, comment='登录ip')
