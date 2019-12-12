@@ -14,8 +14,7 @@ __all__ = []
 def addModel(model):
     __all__.append(model.__name__)
 
-T = TypeVar('T')
-class BaseModel(Generic[T]):
+class BaseModel():
     """
     基类，在此封装一层
     可以提供一些基本的功能
@@ -38,17 +37,17 @@ class User(db.Model, BaseModel):
     __tablename__ = "bao_user"
 
     id = Column(INTEGER, Sequence(start=1, increment=1,
-                                  name="user_id_sep"), primary_key=True, doc='主键', comment='主键')
-    # 性别
-    isMan = Column(SMALLINT, default=0, doc='性别', comment=' 0 未设置 1 男性 2 女性')
+                                  name="user_id_sep"), primary_key=True)
+    # 性别  0 未设置 1 男性 2 女性
+    sex = Column(SMALLINT, nullable=True, default=0)
     # 邮箱
-    email = Column(String(100), unique=True, doc='邮箱', comment=' 邮箱')
+    email = Column(String(100), nullable=True, unique=True)
     # 昵称
-    nickname = Column(String(18), nullable=True, doc='昵称', comment='中文与英文符合混合')
+    nickname = Column(String(18), nullable=True)
     # 密码 md5 加密文
-    password = Column(String(255), nullable=True, doc='密码', comment='MD5加密值')
-    # 用户状态
-    status = Column(SMALLINT, default=0, doc='用户状态', comment='0 未激活 1 正常 2...')
+    password = Column(String(255), nullable=True)
+    # 用户状态 0 未激活 1 正常 2...
+    status = Column(SMALLINT, nullable=True, default=0)
 
     def __init__(self, email: str, password: str, status: int=1):
         self.status = status
@@ -74,8 +73,8 @@ class LoginRecord(db.Model, BaseModel):
     record_id = Column(INTEGER, Sequence(start=1, increment=1,
                                          name="login_record_id_sep"), primary_key=True, autoincrement=True)
     user_id = Column(INTEGER)
-    login_time = Column(String(20), nullable=True, comment='登录时间')
-    log_ip = Column(String(20), nullable=True, comment='登录ip')
+    login_time = Column(String(20), nullable=True)
+    log_ip = Column(String(20), nullable=True)
 
     def __init__(self, user_id: int, login_time: str=None, ip: str=None):
         self.user_id = user_id
@@ -91,12 +90,12 @@ class FileModel(db.Model, BaseModel):
 
     file_id = Column(INTEGER, Sequence(start=1, increment=1,
                                        name="file_id_sep"), primary_key=True, autoincrement=True)  # 主键
-    file_hash = Column(String(64), nullable=False,
-                       doc='hash值', comment='文件的hash值，上传文件的时候会生成')
-    file_name = Column(String(255), nullable=True,
-                       doc='文件名', comment='如果没有指定文件名，则会随机生成一个')
-    file_type = Column(String(32), nullable=True,
-                       doc='文件类型', comment='指的是文件的mimetype')
+    # 文件的hash值，上传文件的时候会生成
+    file_hash = Column(String(64), nullable=False)
+    # 如果没有指定文件名，则会随机生成一个
+    file_name = Column(String(255), nullable=True)
+    # 指的是文件的mimetype
+    file_type = Column(String(32), nullable=True)
 
 
 @addModel
@@ -106,11 +105,11 @@ class FileUserModel(db.Model, BaseModel):
 
     file_user_id = Column(INTEGER, Sequence(start=1, increment=1,
                                             name="file_user_id_sep"), primary_key=True, autoincrement=True)
-    user_id = Column(INTEGER, nullable=False, comment='用户id')
-    file_id = Column(INTEGER, nullable=False, comment='文件id')
-    add_time = Column(String(20), nullable=True, comment='创建时间')
-    file_user_state = Column(
-        SMALLINT, default=1, nullable=True, comment='0 创建 1 损坏或丢失')
+    user_id = Column(INTEGER, nullable=False)
+    file_id = Column(INTEGER, nullable=False)
+    add_time = Column(String(20), nullable=True)
+    # 0 创建 1 损坏或丢失
+    file_user_state = Column(SMALLINT, default=1, nullable=True)
 
     def __init__(self, user_id: int, file_id: int, add_time: str = None):
         self.user_id = user_id

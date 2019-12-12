@@ -40,7 +40,7 @@ def create_app(env: AnyStr) -> Flask:
     config_obj.init_app(app)
     # 插件注册
     db.init_app(app)
-    create_tables(app)
+    # create_tables(app)
     configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')
     return app

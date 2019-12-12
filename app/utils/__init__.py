@@ -8,3 +8,5 @@ from .strings import get_domain, get_random_num,  getmd5, is_emoji, filter_all_i
 
 from .ext import redisClient, db, fileStorage
 from flask_uploads import configure_uploads
+
+from sqlalchemy import text

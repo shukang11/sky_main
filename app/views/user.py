@@ -1,29 +1,12 @@
 from typing import Optional, AnyStr, Dict
 from flask import request, current_app, g
 from ..views import api
-from app.utils.errors import UserError
-from app.utils.response import response_error, response_succ
+from app.utils import UserError
+from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import redisClient
-from app.models import db, User, LoginRecord, User
-
-@api.route('/user/register', methods=['POST'])
-def register():
-    params = request.values or request.get_json() or {}
-    email = params.get("email")
-    password = params.get("password")
-    if len(password) != 32:
-        return UserError.get_error(40000)
-    exsist_user = db.session.query(User).filter_by(email=email).first()
-    if exsist_user:
-        return UserError.get_error(40200)
-    
-    user = User(email, password, 1)
-    user.save()
-    payload = {}
-    payload['user_id'] = user.id
-    return response_succ(body=payload)
-
+from app.utils import db, text
+from app.models import User, LoginRecord
 
 @api.route('/user/login', methods=['POST'])
 def login():
@@ -52,10 +35,3 @@ def logout():
     设置redis时间为过期
     """
     pass
-
-@api.route('/test', methods=['GET', 'POST'])
-def hello():
-    params: Dict[AnyStr, any] = dict(request.values or request.get_json() or {})
-    redisClient.incr('/test')
-    params['hits'] = int(redisClient.get('/test'))
-    return response_succ(body=params)
