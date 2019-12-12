@@ -6,4 +6,4 @@ main_app = create_app(os.environ.get('FLASK_ENV') or 'default')
 application = DispatcherMiddleware(main_app, {})
 
 if __name__ == "__main__":
-    main_app.run(port=9000)
+    main_app.run(port=9000, debug=True)

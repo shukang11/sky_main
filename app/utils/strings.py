@@ -26,7 +26,7 @@ def get_unix_time_tuple(date: datetime.datetime = datetime.datetime.now(), milli
     return second
 
 
-def get_date_from_time_tuple(unix_time=get_unix_time_tuple(), formatter='%Y-%m-%d %H:%M:%S') -> time:
+def get_date_from_time_tuple(unix_time: str=get_unix_time_tuple(), formatter: str='%Y-%m-%d %H:%M:%S') -> time:
     """ translate unix time tuple to time
 
     get time from unix time
@@ -45,7 +45,7 @@ def get_date_from_time_tuple(unix_time=get_unix_time_tuple(), formatter='%Y-%m-%
     return time.strftime(formatter, time_locol)
 
 
-def getmd5(code) -> Optional[str]:
+def getmd5(code: str) -> Optional[str]:
     """ return md5 value of incoming code
 
     get md5 from code
@@ -62,7 +62,7 @@ def getmd5(code) -> Optional[str]:
     return None
 
 
-def get_random_num(digit=6) -> str:
+def get_random_num(digit: int=6) -> str:
     """ get a random num
 
     get random num 
