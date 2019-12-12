@@ -3,7 +3,7 @@ import logging
 
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
-SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'mysql+pymysql://root:12345678@mysql:3000/sky_main')
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'mysql+pymysql://root:12345678@127.0.0.1:3306/sky_main')
 
 class Config:
     # 开启跨站请求伪造防护

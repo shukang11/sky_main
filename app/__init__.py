@@ -27,6 +27,11 @@ def regist_blueprint(app: Flask, src_floder: AnyStr):
         print(blueprint)
         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
+def create_tables(app: Flask):
+    from app.models import __all__
+    with app.app_context():
+        db.create_all()
+
 def create_app(env: AnyStr) -> Flask:
     assert(type(env) is str)
     app = Flask(__name__)
@@ -35,6 +40,7 @@ def create_app(env: AnyStr) -> Flask:
     config_obj.init_app(app)
     # 插件注册
     db.init_app(app)
+    create_tables(app)
     configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')
     return app
