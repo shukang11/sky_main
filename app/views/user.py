@@ -6,7 +6,20 @@ from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import redisClient
 from app.utils import db, text
-from app.models import User, LoginRecord
+from app.model import User
+
+@api.route('/user/register', methods=['POST'])
+def register():
+    params = request.values or request.get_json() or {}
+    email: str = params.get("email")
+    password: str = params.get("password")
+    exsist_user: User = db.session.query(User).filter_by(email=email, password=password).first()
+    if exsist_user:
+        return UserError.get_error(error_code=40200)
+    user = User(email, password=password)
+    db.session.add(user)
+    payload: Dict[AnyStr, int] = {'user_id': user.id}
+    return response_succ(body=payload)
 
 @api.route('/user/login', methods=['POST'])
 def login():

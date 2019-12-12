@@ -9,7 +9,7 @@ def __check_request(method: AnyStr="") -> AnyStr:
     :return: 如果请求的地址为空，则返回空字符串
     """
     methods = ['get', 'post', 'put', 'patch', 'delete', '*']
-    request = request.lower()
+    request = method.lower()
     request = request.strip()
     if len(request) == 0:
         return ""
@@ -23,10 +23,12 @@ def __check_request(method: AnyStr="") -> AnyStr:
     return request
 
 
-def __error_handler(msg: Optional[AnyStr]=None,
-                    code: int=404,
-                    request: Optional[AnyStr]=None,
-                    data: any=None) -> Dict[AnyStr, any]:
+def __error_handler(
+        msg: Optional[AnyStr]=None,
+        code: int=404,
+        request: Optional[AnyStr]=None,
+        data: any=None
+    ) -> Dict[AnyStr, any]:
     """
     将不正确的参数格式化返回
     :param msg: 错误信息
