@@ -4,19 +4,20 @@ from app.utils import UserError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import redisClient
-from app.utils import db, text
+from app.utils import session, text
 from app.model import User
 import app
 
-api = Blueprint('/user', __name__)
-app.fetch_route(api, '/api')
+api = Blueprint('user', __name__)
+app.fetch_route(api, '/user')
 
-@api.route('/user/register', methods=['POST'])
+@api.route('/register', methods=['POST'])
 def register():
     params = request.values or request.get_json() or {}
     email: str = params.get("email")
     password: str = params.get("password")
-    exsist_user: User = db.session.query(User).filter_by(email=email, password=password).first()
+    q = session.query(User).filter(User.email == email, User.password==password)
+    exsist_user = session.query(q.exists())
     if exsist_user:
         return UserError.get_error(error_code=40200)
     user = User(email, password=password)
@@ -24,12 +25,12 @@ def register():
     payload: Dict[AnyStr, int] = {'user_id': user.id}
     return response_succ(body=payload)
 
-@api.route('/user/login', methods=['POST'])
+@api.route('/login', methods=['POST'])
 def login():
     params = request.values or request.get_json() or {}
     email: str = params.get("email")
     password: str = params.get("password")
-    exsist_user: User = db.session.query(User).filter_by(email=email, password=password).first()
+    exsist_user: User = session.query(User).filter_by(email=email, password=password).first()
     if exsist_user:
         # update log time
         login_time: str = get_unix_time_tuple()
@@ -45,7 +46,7 @@ def login():
         return UserError.get_error(40203)
 
 
-@api.route('/user/logout', methods=['POST'])
+@api.route('/logout', methods=['POST'])
 def logout():
     """  登出
     设置redis时间为过期
