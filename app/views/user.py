@@ -1,12 +1,15 @@
 from typing import Optional, AnyStr, Dict
-from flask import request, current_app, g
-from ..views import api
+from flask import request, current_app, g, Blueprint
 from app.utils import UserError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import redisClient
 from app.utils import db, text
 from app.model import User
+import app
+
+api = Blueprint('/user', __name__)
+app.fetch_route(api, '/api')
 
 @api.route('/user/register', methods=['POST'])
 def register():

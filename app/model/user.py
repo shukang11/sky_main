@@ -4,9 +4,10 @@ from typing import Optional, AnyStr
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT, Table
 from app.utils import db
+from .base import BaseModel
 
 
-class User(db.Model):
+class User(db.Model, BaseModel):
     __tablename__ = 'bao_user'
 
     id = Column(INTEGER, Sequence('user_id_seq', start=1,
@@ -36,7 +37,7 @@ class User(db.Model):
         self.identifier = identifier
 
 
-class LoginRecordModel(db.Model):
+class LoginRecordModel(db.Model, BaseModel):
     __tablename__ = 'bao_login_record'
 
     record_id = Column(INTEGER, Sequence('login_record_id_seq', start=1,
