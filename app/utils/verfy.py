@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Callable, AnyStr, Union
+from typing import Optional, Callable, AnyStr, Union, Tuple, Dict
 
 from functools import wraps
 from flask import request, Request, session
 from app.utils import CommonError, UserError
 from app.utils import redisClient
-from app.models import User
+from app.model import User
 
 def login_option(func: Callable):
     """  处理请求中的用户信息，并封装到 `g` 中

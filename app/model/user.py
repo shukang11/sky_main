@@ -21,14 +21,16 @@ class User(db.Model, BaseModel):
     status = Column(SMALLINT, nullable=True, default=1,
                     comment='0 未激活 1 正常 2 异常 3 注销')
 
-    def __init__(self, email: AnyStr, \
-            sex: int = 0, \
-            mobilephone: Optional[AnyStr] = None, \
-            password: Optional[AnyStr] = None, \
-            status: int = 1, \
+    def __init__(
+            self,
+            email: AnyStr,
+            sex: int = 0,
+            mobilephone: Optional[AnyStr] = None,
+            password: Optional[AnyStr] = None,
+            status: int = 1,
             identifier: Optional[AnyStr] = None
-        ):
-        
+    ):
+
         self.email = email
         self.mobilephone = mobilephone
         self.password = password
@@ -45,3 +47,14 @@ class LoginRecordModel(db.Model, BaseModel):
     user_id = Column(INTEGER, nullable=True)
     op_time = Column(String(20), nullable=True)
     op_ip = Column(String(20), nullable=True)
+
+    def __init__(
+            self,
+            user_id: int,
+            op_ip: Optional[AnyStr] = None,
+            op_time: Optional[AnyStr] = None
+    ):
+        from app.utils import get_unix_time_tuple
+        self.user_id = user_id
+        self.op_time = op_time or get_unix_time_tuple()
+        self.op_ip = op_ip
