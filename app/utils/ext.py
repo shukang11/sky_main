@@ -8,9 +8,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_uploads import UploadSet, DEFAULTS, configure_uploads
 from redis import ConnectionPool, Redis
 
+from flask_migrate import Migrate
+
+migrate_manager = Migrate()
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
-
 
 db: SQLAlchemy = SQLAlchemy()
 session = db.session

@@ -1,9 +1,10 @@
 from typing import AnyStr, Tuple
 import os
 from flask import Flask, Blueprint
+
 from config import configInfo, Config, root_dir
 from app.utils import db, configure_uploads, fileStorage
-
+from app.utils import migrate_manager
 
 __all__ = ['create_app', 'fetch_route']
 
@@ -41,7 +42,7 @@ def create_app(env: AnyStr) -> Flask:
     config_obj.init_app(app)
     # 插件注册
     db.init_app(app)
-    create_tables(app)
+    migrate_manager.init_app(app, db)
     configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')
     return app

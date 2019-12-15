@@ -3,6 +3,7 @@
 from .errors import CommonError, UserError
 
 from .ext import redisClient, session, fileStorage
+from .ext import migrate_manager
 from .ext import db
 
 from .helpers import parse_params, get_current_user

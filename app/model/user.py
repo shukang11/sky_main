@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, AnyStr
+from typing import Optional, AnyStr, TypeVar
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT, Table
 from app.utils import db
@@ -47,6 +47,16 @@ class User(db.Model, BaseModel):
             if self.identifier
             else "sky_user_cache_key_{user_id}".format(user_id=self.id)
         )
+
+    @classmethod
+    def get_user(cls, uid: int) -> Optional[TypeVar]:
+        """  从表中查询用户实例
+        Args:
+            uid: 用户id
+        Return: 
+            用户的实例，如果没有找到则返回None
+        """
+        return User.query.filter(User.id == uid).first()
 
 
 class LoginRecordModel(db.Model, BaseModel):

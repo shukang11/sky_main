@@ -51,7 +51,10 @@ def login():
         # update token
         token: AnyStr = getmd5("-".join([email, password, get_random_num(2)]))
         # 保存到redis中, 设置有效时间为7天
-        redisClient.set(exsist_user.get_cache_key, token, 60 * 60 * 24 * 7)
+        cache_key: AnyStr = exsist_user.get_cache_key
+        time: int = 60 * 60 * 24 * 7
+        redisClient.set(cache_key, token, time)
+        redisClient.set(token, cache_key, time)
         payload: Dict[AnyStr, any] = {
             "token": token,
             "user_id": exsist_user.id
@@ -74,5 +77,11 @@ def logout():
 def user_info():
     params = parse_params(request)
     user: User = get_current_user()
-    payload: Dict[AnyStr, any] = {"user_id": user.id}
+    payload: Dict[AnyStr, any] = {
+        'user_id': user.id,
+        'sex': user.sex or 0,
+        'email': user.email or '',
+        'phone': user.mobilephone or '',
+        'account_status': user.status or 0
+        }
     return response_succ(body=payload)

@@ -3,7 +3,7 @@
 from typing import Optional, Callable, AnyStr, Union, Tuple, Dict
 
 from functools import wraps
-from flask import request, Request, session
+from flask import request, Request, session, g
 from app.utils import CommonError, UserError
 from app.utils import redisClient
 from app.model import User
@@ -52,7 +52,9 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
     if not token and is_force:
         return CommonError.get_error(40000)
     if not token: return None
-    user_id: int = redisClient.get(token)
-    user: User = User.get_user(uid=user_id)
+    user_id: str = str(redisClient.get(token), encoding='utf8')
+    user_id = user_id.replace('sky_user_cache_key_', '')
+    print(user_id)
+    user: User = User.get_user(uid=int(user_id))
     return user
     
