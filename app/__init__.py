@@ -36,6 +36,7 @@ def create_app(env: AnyStr) -> Flask:
     assert(type(env) is str)
     app = Flask(__name__)
     config_obj: Config = configInfo.get(env)
+    print(config_obj.SQLALCHEMY_DATABASE_URI)
     app.config.from_object(config_obj)
     config_obj.init_app(app)
     # 插件注册

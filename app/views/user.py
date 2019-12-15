@@ -1,6 +1,6 @@
 from typing import Optional, AnyStr, Dict
 from flask import request, current_app, g, Blueprint
-from app.utils import UserError
+from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import redisClient
@@ -19,13 +19,19 @@ def register():
     email: str = params.get("email")
     password: str = params.get("password")
     q = session.query(User).filter(User.email == email, User.password == password)
-    exsist_user = session.query(q.exists())
+    exsist_user = session.query(q.exists()).scalar()
     if exsist_user:
         return UserError.get_error(error_code=40200)
     user = User(email, password=password)
-    session.add(user)
-    payload: Dict[AnyStr, int] = {"user_id": user.id}
-    return response_succ(body=payload)
+    try:
+        session.add(user)
+        session.commit()
+        payload: Dict[AnyStr, int] = {"user_id": user.id}
+        return response_succ(body=payload)
+    except Exception as e:
+        print('====', e)
+        return CommonError.get_error(error_code= 9999)
+    
 
 
 @api.route("/login", methods=["POST"])
@@ -45,7 +51,7 @@ def login():
         # update token
         token: AnyStr = getmd5("-".join([email, password, get_random_num(2)]))
         # 保存到redis中, 设置有效时间为7天
-        redisClient.set(exsist_user.get_cache_key(), token, 60 * 60 * 24 * 7)
+        redisClient.set(exsist_user.get_cache_key, token, 60 * 60 * 24 * 7)
         payload: Dict[AnyStr, any] = {
             "token": token,
             "user_id": exsist_user.id
