@@ -4,7 +4,7 @@ from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import redisClient
-from app.utils import session, text, parse_params, get_current_user
+from app.utils import session, parse_params, get_current_user
 from app.utils import login_require
 from app.model import User, LoginRecordModel
 import app
@@ -29,7 +29,6 @@ def register():
         payload: Dict[AnyStr, int] = {"user_id": user.id}
         return response_succ(body=payload)
     except Exception as e:
-        print("====", e)
         return CommonError.get_error(error_code=9999)
 
 

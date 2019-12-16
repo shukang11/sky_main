@@ -16,7 +16,7 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = False
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
 
     """配置上传文件相关"""
 

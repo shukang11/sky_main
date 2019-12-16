@@ -45,6 +45,21 @@ class User(db.Model, BaseModel):
         self.sex = sex
         self.identifier = identifier or str(uuid4())
 
+    @classmethod
+    def get_user(cls, uid: Optional[int] = None, identifier: Optional[AnyStr]=None) -> Optional[TypeVar]:
+        """  从表中查询用户实例
+        Args:
+            uid: 用户id
+            identifier: 用户id别名
+        Return: 
+            用户的实例，如果没有找到则返回None
+        """
+        if uid:
+            return User.query.filter(User.id == uid).first()
+        if identifier:
+            return User.query.filter(User.identifier == identifier).first()
+        return None
+
     @property
     def get_cache_key(self) -> AnyStr:
         return (
@@ -52,16 +67,6 @@ class User(db.Model, BaseModel):
             if self.identifier
             else "sky_user_cache_key_{user_id}".format(user_id=self.id)
         )
-
-    @classmethod
-    def get_user(cls, uid: int) -> Optional[TypeVar]:
-        """  从表中查询用户实例
-        Args:
-            uid: 用户id
-        Return: 
-            用户的实例，如果没有找到则返回None
-        """
-        return User.query.filter(User.id == uid).first()
 
     @property
     def info_dict(self) -> Dict[AnyStr, any]:
