@@ -4,9 +4,11 @@ from flask import Flask, Blueprint
 
 from config import configInfo, Config, root_dir
 from app.utils import db, configure_uploads, fileStorage
-from app.utils import migrate_manager
+from app.utils import migrate_manager, get_logger
 
 __all__ = ['create_app', 'fetch_route']
+
+logger = get_logger(__name__)
 
 route_list: Tuple[Blueprint, AnyStr] = []
 
@@ -25,7 +27,7 @@ def regist_blueprint(app: Flask, src_floder: AnyStr):
             __import__('app.' + routes)
     
     for blueprint in route_list:
-        print(blueprint)
+        logger.debug(blueprint)
         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
 def create_tables(app: Flask):

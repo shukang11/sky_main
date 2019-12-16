@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from typing import TypeVar, Dict, AnyStr, Any, Optional
+import logging
+import sys
+from os import makedirs
+from os.path import dirname, exists
 
 from app.model import User
+
 """
 Helper functions
 """
+
 
 def parse_params(request: TypeVar) -> Dict[AnyStr, Any]:
     """  从一个Request实例中解析params参数
@@ -16,6 +22,7 @@ def parse_params(request: TypeVar) -> Dict[AnyStr, Any]:
     params = request.values or request.get_json() or {}
     return dict(params)
 
+
 def get_current_user() -> Optional[User]:
     """  尝试从当前服务实例中获得附加的用户实例
     Args:
@@ -25,6 +32,43 @@ def get_current_user() -> Optional[User]:
     """
     try:
         from flask import g
-        return getattr(g, 'current_user', None)
+
+        return getattr(g, "current_user", None)
     except expression as e:
         return None
+
+
+loggers: Dict[AnyStr, any] = {}
+
+LOG_ENABLE = True  # 是否开启日志
+LOG_LEVEL = "DEBUG"  # 日志输出等级
+LOG_FORMAT = "%(levelname)s - %(asctime)s - process: %(process)d - %(filename)s - %(name)s - %(lineno)d - %(module)s - %(message)s"  # 每条日志输出格式
+
+
+def get_logger(name: Optional[AnyStr] = None):
+    """  获得一个logger 实例，用来打印日志
+    Args: 
+        name: logger的名称
+    Return:
+        返回一个logger实例
+    """
+    global loggers
+
+    if not name:
+        name = __name__
+
+    if loggers.get(name):
+        return loggers.get(name)
+
+    logger = logging.getLogger(name=name)
+    logger.setLevel(LOG_LEVEL)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(LOG_LEVEL)
+    formatter = logging.Formatter(LOG_FORMAT)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    loggers[name] = logger
+
+    return logger

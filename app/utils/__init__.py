@@ -7,6 +7,7 @@ from .ext import migrate_manager
 from .ext import db
 
 from .helpers import parse_params, get_current_user
+from .helpers import get_logger
 
 from .response import response_error, response_succ
 

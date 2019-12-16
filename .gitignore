@@ -134,3 +134,6 @@ dmypy.json
 # sqldata
 mysqldata/
 migrations/
+
+#sky_main
+logs/
