@@ -9,7 +9,7 @@ from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require
 from app.utils import is_link, get_logger
-from app.task.sample import reversed as rev
+from app.task import rss as RssTask
 from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
 import app
 
@@ -54,4 +54,5 @@ def add_rss_source():
         rss_user = RssUserModel(user.id, rss_id)
         rss_user.save(True)
         payload["rss_id"] = rss_id
+    RssTask.parser_feed.delay(source)
     return response_succ(body=payload)

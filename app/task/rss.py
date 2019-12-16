@@ -4,8 +4,21 @@ from typing import Optional, Dict, Text, AnyStr, List
 import feedparser
 from app.utils import get_unix_time_tuple, filter_all_img_src
 from app.utils import celery_app
+from app.utils import session
+from app.utils import get_logger
+from app.model import RssContentModel
 
-@celery_app.task(name='web_task.parser_feed_root')
+logger = get_logger(__name__)
+
+
+@celery_app.task(name="web_task.parser_feed_url")
+def parser_feed(feed_url: AnyStr) -> Dict[AnyStr, any]:
+    """  经过 `parser_feed_root`后将其中的数据调用 `save_feed_items`存储
+    """
+    result = parser_feed_root(feed_url)
+    save_feed_items(feed_url, result)
+
+
 def parser_feed_root(feed_url: AnyStr) -> Dict[AnyStr, any]:
     """  解析rss网址,产生一个包含了 items 的字典，还需要对其中的信息进行处理
     Args:
@@ -79,9 +92,12 @@ def save_feed_items(feed_url: AnyStr, payload: Optional[Dict[AnyStr, any]]) -> b
             published = parsed.get("published") or ""
             descript = parsed.get("descript") or ""
             timeLocal = get_unix_time_tuple()
-
+            model: RssContentModel = RssContentModel(
+                link, feed_url, title, descript, cover_img, published, timeLocal
+            )
+            model.save(True)
         except Exception as error:
-            print(error)
+            logger.warning(str(error))
             continue
 
     return True

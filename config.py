@@ -64,7 +64,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SERVICE_TOKEN_SUFFIX = "im_token_suffix"
     # 打开数据库语句输出
-    SQLALCHEMY_ECHO = False
+    SQLALCHEMY_ECHO = True
     # 分页数量
     PAGE_LIMIT = 11
 
