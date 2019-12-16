@@ -3,7 +3,9 @@ import time
 from typing import Optional, Dict, Text, AnyStr, List
 import feedparser
 from app.utils import get_unix_time_tuple, filter_all_img_src
+from app.utils import celery_app
 
+@celery_app.task(name='web_task.parser_feed_root')
 def parser_feed_root(feed_url: AnyStr) -> Dict[AnyStr, any]:
     """  解析rss网址,产生一个包含了 items 的字典，还需要对其中的信息进行处理
     Args:
@@ -13,33 +15,35 @@ def parser_feed_root(feed_url: AnyStr) -> Dict[AnyStr, any]:
     """
     feeds = feedparser.parse(feed_url)
     payload: Dict[AnyStr, any] = {}
-    if not hasattr(feeds, 'version'):
+    if not hasattr(feeds, "version"):
         # 如果没有版本信息，无法判断是不是个xml，以及使用哪个版本的解析
         return payload
     version: AnyStr = feeds.version
-    rss_title: AnyStr = feeds.feed.title if hasattr(feeds.feed, 'title') else ''  # rss的标题
-    rss_link: AnyStr = feeds.feed.link if hasattr(feeds.feed, 'link') else None  # 链接
+    rss_title: AnyStr = feeds.feed.title if hasattr(
+        feeds.feed, "title"
+    ) else ""  # rss的标题
+    rss_link: AnyStr = feeds.feed.link if hasattr(feeds.feed, "link") else None  # 链接
     if not rss_link:
         return payload
-    
-    payload['version'] = version
-    payload['title'] = rss_title
-    payload['link'] = rss_link
-    
+
+    payload["version"] = version
+    payload["title"] = rss_title
+    payload["link"] = rss_link
+
     subtitle: Optional[AnyStr] = None
-    if version == 'atom10':
-        subtitle = ''
-    elif version == 'rss20':
-        subtitle = feeds.feed.subtitle or '' # 副标题
-    payload['subtitle'] = subtitle
+    if version == "atom10":
+        subtitle = ""
+    elif version == "rss20":
+        subtitle = feeds.feed.subtitle or ""  # 副标题
+    payload["subtitle"] = subtitle
 
     result: List[Dict[AnyStr, any]] = []
-    for item in feeds['entries']:
+    for item in feeds["entries"]:
         r = {}
         for k in item:
             r[k] = item[k]
         result.append(r)
-    payload['items'] = result
+    payload["items"] = result
     return payload
 
 
@@ -51,7 +55,8 @@ def save_feed_items(feed_url: AnyStr, payload: Optional[Dict[AnyStr, any]]) -> b
     Return:
         如果处理成功，则返回 True
     """
-    if not payload: return False
+    if not payload:
+        return False
     operator_map = {
         "rss20": parse_rss20,
         "atom10": parse_atom,
@@ -60,25 +65,25 @@ def save_feed_items(feed_url: AnyStr, payload: Optional[Dict[AnyStr, any]]) -> b
     operator = operator_map.get(payload["version"]) or parse_rss20
     if not operator:
         return False
-    version = payload['version'] if hasattr(payload, 'version') else ''
-    title = payload['title'] or '无标题'
-    subtitle = payload['subtitle']
-    items = payload['items']
+    version = payload["version"] if hasattr(payload, "version") else ""
+    title = payload["title"] or "无标题"
+    subtitle = payload["subtitle"]
+    items = payload["items"]
     for item in items:
         try:
             parsed = operator(item)
             descript = ""
-            title: str = parsed.get('title') or ''
-            link = parsed.get('link') or ''
-            cover_img = parsed.get('cover_img') or ''
-            published = parsed.get('published') or ''
-            descript = parsed.get('descript') or ''
+            title: str = parsed.get("title") or ""
+            link = parsed.get("link") or ""
+            cover_img = parsed.get("cover_img") or ""
+            published = parsed.get("published") or ""
+            descript = parsed.get("descript") or ""
             timeLocal = get_unix_time_tuple()
-            
+
         except Exception as error:
             print(error)
             continue
-        
+
     return True
 
 
@@ -96,7 +101,7 @@ def parse_rss20(item: Dict[AnyStr, any]) -> Optional[Dict[AnyStr, any]]:
         imgs = filter_all_img_src(summary)
         link: str = item["link"] or item["id"] or ""
         published = time.gmtime(time.time())
-        
+
         if hasattr(item, "published"):
             published = item["published"]
         if hasattr(item, "published_parsed"):
@@ -108,10 +113,11 @@ def parse_rss20(item: Dict[AnyStr, any]) -> Optional[Dict[AnyStr, any]]:
         result.setdefault("link", link)
         if len(imgs) > 0:
             result.setdefault("cover_img", imgs[0])
-        result.setdefault('published', published)
+        result.setdefault("published", published)
         return result
     except Exception as e:
         return None
+
 
 def parse_rss10(item: Dict[str, any]) -> Optional[Dict[str, any]]:
     return parse_rss20(item)
