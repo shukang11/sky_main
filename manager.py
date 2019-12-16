@@ -2,10 +2,12 @@ import os
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from flask_script import Manager
 from flask_migrate import MigrateCommand
-from app import create_app
+from app import create_app, make_celery
 
 main_app = create_app(os.environ.get('FLASK_ENV') or 'default')
 application = DispatcherMiddleware(main_app, {})
+
+celery_app = make_celery(main_app)
 
 manager = Manager(main_app)
 manager.add_command('db', MigrateCommand)

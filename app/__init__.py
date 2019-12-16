@@ -6,6 +6,8 @@ from config import configInfo, Config, root_dir
 from app.utils import db, configure_uploads, fileStorage
 from app.utils import migrate_manager, get_logger
 
+from app.task import make_celery
+
 __all__ = ['create_app', 'fetch_route']
 
 logger = get_logger(__name__)
