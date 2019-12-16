@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, AnyStr, Dict
+from typing import Optional, AnyStr, Dict, List
 from flask import request, Blueprint
 from sqlalchemy import and_
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
-from app.utils import login_require
+from app.utils import login_require, pages_info_requires, get_page_info
 from app.utils import is_link, get_logger
 from app.task import rss as RssTask
 from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
@@ -16,7 +16,7 @@ import app
 api = Blueprint("rss", __name__)
 app.fetch_route(api, "/rss")
 
-loger = get_logger(__name__)
+logger = get_logger(__name__)
 
 
 @api.route("/add", methods=["POST"])
@@ -56,3 +56,34 @@ def add_rss_source():
         payload["rss_id"] = rss_id
     RssTask.parser_feed.delay(source)
     return response_succ(body=payload)
+
+
+@api.route("/limit/", methods=["GET"])
+@login_require
+@pages_info_requires
+def rss_list():
+    """ 查看订阅列表 """
+    params = parse_params(request)
+    user: User = get_current_user()
+    pageinfo: Dict[AnyStr, int] = get_page_info()
+    result = (
+        session.query(RssModel)
+        .filter(
+            and_(
+                RssUserModel.user_id == user.id, RssUserModel.rss_id == RssModel.rss_id
+            )
+        )
+        .offset(pageinfo["offset"])
+        .limit(pageinfo["limit"])
+        .all()
+    )
+    payload: List[Dict[AnyStr, any]] = []
+    for r in result:
+        item = {
+            "rss_id": r.rss_id,
+            "rss_title": r.rss_title or '',
+            "rss_link": r.rss_link,
+            "rss_state": int(r.rss_state),
+        }
+        payload.append(item)
+    return response_succ(payload)

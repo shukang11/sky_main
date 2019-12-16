@@ -6,6 +6,7 @@ from functools import wraps
 from flask import request, Request, session, g
 from app.utils import CommonError, UserError
 from app.utils import redisClient
+from app.utils import parse_params
 from app.model import User
 
 def login_option(func: Callable):
@@ -44,7 +45,7 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
         is_force: 是否是强制需要用户信息， 如果是强制的，在没有获得用户的时候会返回一个错误报文
     Return: 获得的用户实例，如果根据信息无法获得用户实例，则返回 None
     """
-    params = request.values or request.get_json() or {}
+    params = parse_params(request)
     alise: AnyStr = 'token'
     token: Optional[AnyStr] = params.get(alise)
     if not token:
@@ -57,3 +58,20 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
     user: User = User.get_user(identifier=identifier)
     return user
     
+
+def pages_info_requires(func):
+    """ 页面信息请求；分页等 """
+
+    @wraps(func)
+    def decorator_view(*args, **kwargs):
+        params = parse_params(request)
+        pages: int = int(params.get('pages') or 0)
+        limit: int = int(params.get('limit') or 11)
+
+        info: Dict[AnyStr, int] = {}
+        info['limit'] = max(limit, 1)
+        info['offset'] = max(pages, 0) * limit
+        info['pages'] = max(pages, 0)
+        g.pageinfo = info
+        return func(*args, **kwargs)
+    return decorator_view

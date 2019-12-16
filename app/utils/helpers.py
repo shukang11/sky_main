@@ -38,6 +38,21 @@ def get_current_user() -> Optional[User]:
         return None
 
 
+def get_page_info() -> Optional[Dict[AnyStr, int]]:
+    """  尝试从当前服务实例中获得附加的页面实例
+    Args:
+        g: flask 的 g 对象
+    Return:
+        如果其中附加了页面实例，则返回，如果没有就返回None
+    """
+    try:
+        from flask import g
+
+        return getattr(g, "pageinfo", None)
+    except expression as e:
+        return None
+
+
 loggers: Dict[AnyStr, any] = {}
 
 LOG_ENABLE = True  # 是否开启日志
