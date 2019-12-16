@@ -31,7 +31,7 @@ def add_todo():
 
     params = parse_params(request)
     user: User = get_current_user()
-    title = params.get('title')
+    title = params.get("title")
     try:
         todo = TodoModel()
         todo.todo_title = title
@@ -39,9 +39,7 @@ def add_todo():
         todo.todo_state = 1
         todo.bind_user_id = user.id
         todo.save(True)
-        result = {
-            "todo_id": todo.todo_id
-        }
+        result = {"todo_id": todo.todo_id}
         return response_succ(body=result)
     except Exception as e:
         return CommonError.get_error(error_code=9999)
@@ -72,20 +70,21 @@ def set_todo_state(todo_id: int, state: int) -> Optional[Dict[AnyStr, any]]:
 
     result = None
     try:
-        todo = session.query(TodoModel).filter_by(todo_id=todo_id).one()
+        todo: Optional[TodoModel] = session.query(TodoModel).filter_by(
+            todo_id=todo_id
+        ).one()
         if not todo:
             return result
         todo.todo_state = state
-        session.commit()
+        todo.save(True)
         result = {
             "todo_id": todo.todo_id,
             "todo_title": todo.todo_title,
-            "todo_state": todo.todo_state
+            "todo_state": todo.todo_state,
         }
     except NoResultFound as e:
         result = None
     return result
-
 
 
 @api.route("/finish", methods=["POST"])
@@ -116,8 +115,7 @@ def filter_todo(filter: str = None):
     params = parse_params(request)
     user: User = get_current_user()
     option_filter = filter or "all"
-    todos = session.query(TodoModel).filter(
-        TodoModel.bind_user_id == user.id)
+    todos = session.query(TodoModel).filter(TodoModel.bind_user_id == user.id)
 
     if option_filter == "undo":
         todos = todos.filter(TodoModel.todo_state == 1).all()
@@ -129,18 +127,20 @@ def filter_todo(filter: str = None):
     if not todos or len(todos) == 0:
         response_succ(body=())
     for todo in todos:
-        result.append({
-            "todo_id": todo.todo_id,
-            "todo_title": todo.todo_title,
-            "todo_state": todo.todo_state
-        })
+        result.append(
+            {
+                "todo_id": todo.todo_id,
+                "todo_title": todo.todo_title,
+                "todo_state": todo.todo_state,
+            }
+        )
     return response_succ(body=result)
 
 
 @api.route("/undo", methods=["POST"])
 @login_require
 def undo_todo():
-    params =parse_params(request)
+    params = parse_params(request)
     todo_id = params.get("todo_id")
     result = set_todo_state(todo_id, 1)
     if not result:

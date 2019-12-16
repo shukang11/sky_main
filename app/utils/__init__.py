@@ -18,7 +18,7 @@ from .strings import get_domain
 from .strings import filter_all_img_src
 from .strings import contain_emoji
 from .strings import is_emoji
-
+from .strings import is_link
 
 from .verfy import login_option, login_require
 
