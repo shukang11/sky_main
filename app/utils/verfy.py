@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Callable, AnyStr, Union
+from typing import Optional, Callable, AnyStr, Union, Tuple, Dict
 
 from functools import wraps
-from flask import request, Request, session
+from flask import request, Request, session, g
 from app.utils import CommonError, UserError
 from app.utils import redisClient
-from app.models import User
+from app.model import User
 
 def login_option(func: Callable):
     """  处理请求中的用户信息，并封装到 `g` 中
@@ -52,7 +52,9 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
     if not token and is_force:
         return CommonError.get_error(40000)
     if not token: return None
-    user_id: int = redisClient.get(token)
-    user: User = User.get_user(uid=user_id)
+    user_id: str = str(redisClient.get(token), encoding='utf8')
+    print(user_id)
+    identifier = user_id.replace('sky_user_cache_key_', '')
+    user: User = User.get_user(identifier=identifier)
     return user
     

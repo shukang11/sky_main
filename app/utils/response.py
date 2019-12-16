@@ -2,7 +2,7 @@ from typing import Dict, Tuple, AnyStr, Optional, Union
 from flask import jsonify, Response
 
 
-def __check_request(method: AnyStr="") -> AnyStr:
+def __check_request(method: AnyStr = "") -> AnyStr:
     """
     检查返回的错误信息是否合规则
     :param request: 返回的请求地址
@@ -24,11 +24,11 @@ def __check_request(method: AnyStr="") -> AnyStr:
 
 
 def __error_handler(
-        msg: Optional[AnyStr]=None,
-        code: int=404,
-        request: Optional[AnyStr]=None,
-        data: any=None
-    ) -> Dict[AnyStr, any]:
+    msg: Optional[AnyStr] = None,
+    code: int = 404,
+    request: Optional[AnyStr] = None,
+    data: any = None
+) -> Dict[AnyStr, any]:
     """
     将不正确的参数格式化返回
     :param msg: 错误信息
@@ -47,8 +47,11 @@ def __error_handler(
     return result
 
 
-def response_succ(status_code: int=200, body: Dict={}, 
-                header: Optional[Dict]=None) -> Tuple[Dict[str, any], int, Dict[str, str]]:
+def response_succ(
+    body: Dict = {},
+    status_code: int = 200,
+    header: Optional[Dict] = None
+) -> Tuple[Dict[str, any], int, Dict[str, str]]:
     """返回一个成功的报文
     对返回值进行统一的包装，避免有多种返回值格式
 
@@ -56,7 +59,7 @@ def response_succ(status_code: int=200, body: Dict={},
         status_code: 状态值，成功的可选值应该是[200, 201, 202, 204]中的一个
         body: 返回的报文内容
         header: 返回头的内容
-    
+
     200 OK - [GET]：服务器成功返回用户请求的数据，该操作是幂等的（Idempotent）。
     201 CREATED - [POST/PUT/PATCH]：用户新建或修改数据成功。
     202 Accepted - [*]：表示一个请求已经进入后台排队（异步任务）
@@ -64,7 +67,7 @@ def response_succ(status_code: int=200, body: Dict={},
 
     Returns:
         返回一个元祖，包含了[返回值，状态码，返回头]
-    
+
     Raises:
         ValueError: 如果状态码不在200段，则抛出异常; 如果无法将返回值解析为json，则抛出异常
     """
@@ -91,8 +94,12 @@ def response_succ(status_code: int=200, body: Dict={},
     return result, status_code, header
 
 
-def response_error(error_code: int=0, msg: str=None, 
-                http_code: int=0, header: Optional[Dict]=None) -> Tuple[str, int, Dict[str, str]]:
+def response_error(
+    error_code: int = 0,
+    msg: str = None,
+    http_code: int = 0,
+    header: Optional[Dict] = None
+) -> Tuple[str, int, Dict[str, str]]:
     """  对一个返回错误包装
     包装格式，保持统一
     Args:

@@ -1,11 +1,14 @@
 from typing import AnyStr, Tuple
 import os
 from flask import Flask, Blueprint
+
 from config import configInfo, Config, root_dir
 from app.utils import db, configure_uploads, fileStorage
-
+from app.utils import migrate_manager, get_logger
 
 __all__ = ['create_app', 'fetch_route']
+
+logger = get_logger(__name__)
 
 route_list: Tuple[Blueprint, AnyStr] = []
 
@@ -24,7 +27,7 @@ def regist_blueprint(app: Flask, src_floder: AnyStr):
             __import__('app.' + routes)
     
     for blueprint in route_list:
-        print(blueprint)
+        logger.debug(blueprint)
         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
 def create_tables(app: Flask):
@@ -36,10 +39,12 @@ def create_app(env: AnyStr) -> Flask:
     assert(type(env) is str)
     app = Flask(__name__)
     config_obj: Config = configInfo.get(env)
+    print(config_obj.SQLALCHEMY_DATABASE_URI)
     app.config.from_object(config_obj)
     config_obj.init_app(app)
     # 插件注册
     db.init_app(app)
+    migrate_manager.init_app(app, db)
     create_tables(app)
     configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')

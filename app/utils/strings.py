@@ -5,10 +5,13 @@ import random
 import datetime
 import time
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, AnyStr
 
 
-def get_unix_time_tuple(date: datetime.datetime = datetime.datetime.now(), millisecond: bool = False) -> str:
+def get_unix_time_tuple(
+    date: datetime.datetime = datetime.datetime.now(),
+    millisecond: bool = False
+) -> str:
     """ get time tuple
 
     get unix time tuple, default `date` is current time
@@ -26,7 +29,7 @@ def get_unix_time_tuple(date: datetime.datetime = datetime.datetime.now(), milli
     return second
 
 
-def get_date_from_time_tuple(unix_time: str=get_unix_time_tuple(), formatter: str='%Y-%m-%d %H:%M:%S') -> time:
+def get_date_from_time_tuple(unix_time: str = get_unix_time_tuple(), formatter: str = '%Y-%m-%d %H:%M:%S') -> time:
     """ translate unix time tuple to time
 
     get time from unix time
@@ -62,7 +65,7 @@ def getmd5(code: str) -> Optional[str]:
     return None
 
 
-def get_random_num(digit: int=6) -> str:
+def get_random_num(digit: int = 6) -> str:
     """ get a random num
 
     get random num 
@@ -140,3 +143,14 @@ def filter_all_img_src(content: str) -> List[str]:
         if imgs:
             img_url_list.append(imgs[0])  # 找到所有的img_url
     return img_url_list
+
+
+def is_link(url: Optional[AnyStr]) -> bool:
+    """  验证是否是一个链接
+    Args:
+        url: 需要验证的字符
+    Return: 如果是合法的链接，返回 True ，否则返回 False
+    """
+    regex = r'(https?)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
+    result = re.match(regex, url)
+    return False if not result else True
