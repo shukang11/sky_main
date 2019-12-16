@@ -29,9 +29,8 @@ def register():
         payload: Dict[AnyStr, int] = {"user_id": user.id}
         return response_succ(body=payload)
     except Exception as e:
-        print('====', e)
-        return CommonError.get_error(error_code= 9999)
-    
+        print("====", e)
+        return CommonError.get_error(error_code=9999)
 
 
 @api.route("/login", methods=["POST"])
@@ -55,10 +54,7 @@ def login():
         time: int = 60 * 60 * 24 * 7
         redisClient.set(cache_key, token, time)
         redisClient.set(token, cache_key, time)
-        payload: Dict[AnyStr, any] = {
-            "token": token,
-            "user_id": exsist_user.id
-        }
+        payload: Dict[AnyStr, any] = {"token": token, "user_id": exsist_user.id}
         return response_succ(body=payload)
     else:
         return UserError.get_error(40203)
@@ -75,13 +71,23 @@ def logout():
 @api.route("/info", methods=["GET"])
 @login_require
 def user_info():
+    """  获得用户基本信息 
+    需要登录权限
+    """
     params = parse_params(request)
     user: User = get_current_user()
-    payload: Dict[AnyStr, any] = {
-        'user_id': user.id,
-        'sex': user.sex or 0,
-        'email': user.email or '',
-        'phone': user.mobilephone or '',
-        'account_status': user.status or 0
-        }
+    payload: Dict[AnyStr, any] = user.info_dict
+    return response_succ(body=payload)
+
+
+@api.route("/modify_info", methods=["POST"])
+def modify_user_info():
+    params = parse_params(request)
+    user: User = get_current_user()
+    # 用户昵称
+    nickname = params.get("nickname")
+    if nickname:
+        user.nickname = nickname
+    user.save()
+    payload: Dict[AnyStr, any] = user.info_dict
     return response_succ(body=payload)

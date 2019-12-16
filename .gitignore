@@ -133,3 +133,4 @@ dmypy.json
 
 # sqldata
 mysqldata/
+migrations/

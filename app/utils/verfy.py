@@ -54,7 +54,6 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
     if not token: return None
     user_id: str = str(redisClient.get(token), encoding='utf8')
     user_id = user_id.replace('sky_user_cache_key_', '')
-    print(user_id)
     user: User = User.get_user(uid=int(user_id))
     return user
     
