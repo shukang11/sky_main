@@ -40,6 +40,20 @@ class Config:
     LOGGING_DATE_FORMATTER = "%a %d %b %Y %H:%M:%S"
     LOGGING_DIR = os.path.join(root_dir, "logs")
 
+    """Celery 配置"""
+    
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+
+    BROKER_URL = 'redis://localhost:6379/0'
+
+    CELERY_TIMEZONE='Asia/Shanghai'
+
+    CELERY_TASK_SERIALIZER = 'json'
+
+    CELERY_RESULT_SERIALIZER = 'json'
+
+    CELERY_ACCEPT_CONTENT=['json']
+    
     @classmethod
     def init_app(app, *args, **kwargs):
         pass
@@ -50,7 +64,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SERVICE_TOKEN_SUFFIX = "im_token_suffix"
     # 打开数据库语句输出
-    SQLALCHEMY_ECHO = False
+    SQLALCHEMY_ECHO = True
     # 分页数量
     PAGE_LIMIT = 11
 

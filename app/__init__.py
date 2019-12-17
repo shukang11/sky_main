@@ -5,6 +5,7 @@ from flask import Flask, Blueprint
 from config import configInfo, Config, root_dir
 from app.utils import db, configure_uploads, fileStorage
 from app.utils import migrate_manager, get_logger
+from app.utils import celery_app
 
 __all__ = ['create_app', 'fetch_route']
 
@@ -27,7 +28,6 @@ def regist_blueprint(app: Flask, src_floder: AnyStr):
             __import__('app.' + routes)
     
     for blueprint in route_list:
-        logger.debug(blueprint)
         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
 def create_tables(app: Flask):
@@ -48,4 +48,6 @@ def create_app(env: AnyStr) -> Flask:
     create_tables(app)
     configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')
+    # 更新 celery 配置
+    celery_app.conf.update(app.config)
     return app

@@ -10,6 +10,8 @@ from redis import ConnectionPool, Redis
 
 from flask_migrate import Migrate
 
+from celery import Celery
+
 migrate_manager = Migrate()
 
 REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
@@ -17,9 +19,11 @@ REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
 db: SQLAlchemy = SQLAlchemy()
 session = db.session
 
+celery_app = Celery(__name__)
+
 fileStorage = UploadSet(extensions=DEFAULTS)
 
 __pool = ConnectionPool(host=REDIS_HOST, port=6379)
 redisClient = Redis(connection_pool=__pool)
 
-__all__ = ['db', 'fileStorage', 'redisClient']
+__all__ = ['db', 'fileStorage', 'redisClient', 'celery_app']

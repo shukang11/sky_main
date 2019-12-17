@@ -64,7 +64,7 @@ class RssContentModel(db.Model, BaseModel):
         primary_key=True,
         autoincrement=True,
     )
-    content_base = Column(String(255), nullable=True)
+    rss_id = Column(INTEGER, comment='属于哪一个订阅的内容')
     content_link = Column(String(255), nullable=True)
     content_title = Column(String(255), nullable=True)
     content_description = Column(TEXT, nullable=True)
@@ -75,7 +75,7 @@ class RssContentModel(db.Model, BaseModel):
     def __init__(
         self,
         link: str,
-        baseurl: str,
+        pid: int,
         title: str,
         description: str,
         cover_img: str,
@@ -83,7 +83,7 @@ class RssContentModel(db.Model, BaseModel):
         add_time: Optional[AnyStr] = None,
     ):
         self.content_link = link
-        self.content_base = baseurl
+        self.rss_id = pid
         self.content_title = title
         self.published_time = published_time
         self.content_image_cover = cover_img
@@ -108,3 +108,17 @@ class RssReadRecordModel(db.Model, BaseModel):
         self.read_url_id = url_id
         self.read_user_id = user_id
         self.read_time = read_at
+
+
+class TaskModel(db.Model, BaseModel):
+    """ 包含了任务发起者，开始时间, 结束时间 状态等 """
+    __tablename__ = 'bao_task_record'
+
+    task_id = Column(String(125), primary_key=True)
+    tast_name = Column(String(255))
+    argsrepr = Column(String(255))
+    kwargs = Column(String(255))
+    user_id = Column(INTEGER)
+    begin_at = Column(String(20))
+    end_at = Column(String(20))
+    is_succ = Column(SMALLINT)

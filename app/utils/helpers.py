@@ -37,6 +37,30 @@ def get_current_user() -> Optional[User]:
     except expression as e:
         return None
 
+class PageInfo:
+    page: int = 0
+    limit: int = 11
+    offset: int = 0
+
+    def __init__(self, page: int, limit: int):
+        self.pages = page
+        self.limit = limit
+        self.offset = page * limit
+
+def get_page_info() -> Optional[PageInfo]:
+    """  尝试从当前服务实例中获得附加的页面实例
+    Args:
+        g: flask 的 g 对象
+    Return:
+        如果其中附加了页面实例，则返回，如果没有就返回None
+    """
+    try:
+        from flask import g
+
+        return getattr(g, "pageinfo", None)
+    except expression as e:
+        return None
+
 
 loggers: Dict[AnyStr, any] = {}
 
