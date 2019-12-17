@@ -41,7 +41,7 @@ class Config:
     LOGGING_DIR = os.path.join(root_dir, "logs")
 
     """Celery 配置"""
-    
+    from datetime import timedelta
     CELERY_RESULT_BACKEND = REDIS_URI
 
     BROKER_URL = REDIS_URI + '0'
@@ -53,6 +53,15 @@ class Config:
     CELERY_RESULT_SERIALIZER = 'json'
 
     CELERY_ACCEPT_CONTENT=['json']
+
+    # 定义定时任务
+    CELERYBEAT_SCHEDULE = {
+        'app.task.beat.parse_rsses': {
+            'task': 'app.task.beat.parse_rsses',
+            'schedule': timedelta(seconds=60*60*4),
+            'args': ()
+        }
+    }
     
     @classmethod
     def init_app(app, *args, **kwargs):
