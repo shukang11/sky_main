@@ -8,7 +8,7 @@ from .ext import db
 from .ext import celery_app
 
 from .helpers import parse_params, get_current_user
-from .helpers import get_logger, get_page_info
+from .helpers import get_logger, get_page_info, PageInfo
 
 from .response import response_error, response_succ
 

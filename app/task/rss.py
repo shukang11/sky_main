@@ -6,7 +6,7 @@ from app.utils import get_unix_time_tuple, filter_all_img_src
 from app.utils import celery_app
 from app.utils import session
 from app.utils import get_logger
-from app.model import RssContentModel
+from app.model import RssContentModel, RssModel
 
 logger = get_logger(__name__)
 
@@ -82,6 +82,10 @@ def save_feed_items(feed_url: AnyStr, payload: Optional[Dict[AnyStr, any]]) -> b
     title = payload["title"] or "无标题"
     subtitle = payload["subtitle"]
     items = payload["items"]
+    rss: RssModel = RssModel.query.filter(RssModel.rss_link == feed_url).one()
+    rss.rss_title = title
+    rss.version = payload.get('version')
+    session.commit()
     for item in items:
         try:
             parsed = operator(item)
@@ -93,7 +97,7 @@ def save_feed_items(feed_url: AnyStr, payload: Optional[Dict[AnyStr, any]]) -> b
             descript = parsed.get("descript") or ""
             timeLocal = get_unix_time_tuple()
             model: RssContentModel = RssContentModel(
-                link, feed_url, title, descript, cover_img, published, timeLocal
+                link, rss.rss_id, title, descript, cover_img, published, timeLocal
             )
             model.save(True)
         except Exception as error:

@@ -6,7 +6,7 @@ from functools import wraps
 from flask import request, Request, session, g
 from app.utils import CommonError, UserError
 from app.utils import redisClient
-from app.utils import parse_params
+from app.utils import parse_params, PageInfo
 from app.model import User
 
 def login_option(func: Callable):
@@ -61,17 +61,17 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
 
 def pages_info_requires(func):
     """ 页面信息请求；分页等 """
-
+    
     @wraps(func)
     def decorator_view(*args, **kwargs):
         params = parse_params(request)
         pages: int = int(params.get('pages') or 0)
         limit: int = int(params.get('limit') or 11)
 
-        info: Dict[AnyStr, int] = {}
-        info['limit'] = max(limit, 1)
-        info['offset'] = max(pages, 0) * limit
-        info['pages'] = max(pages, 0)
+        info: PageInfo = PageInfo(
+            max(pages, 0),
+            max(limit, 1)
+        )
         g.pageinfo = info
         return func(*args, **kwargs)
     return decorator_view

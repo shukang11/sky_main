@@ -7,14 +7,14 @@ from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
-from app.utils import login_require, pages_info_requires, get_page_info
+from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
 from app.utils import is_link, get_logger
 from app.task import rss as RssTask
 from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
 import app
 
-api = Blueprint("rss", __name__)
-app.fetch_route(api, "/rss")
+api = Blueprint('rss', __name__)
+app.fetch_route(api, '/rss')
 
 logger = get_logger(__name__)
 
@@ -27,11 +27,11 @@ def add_rss_source():
     """
     params = parse_params(request)
     user: User = get_current_user()
-    source = params.get("source")
+    source = params.get('source')
     if not source:
         return CommonError.get_error(40000)
     if not is_link(source):
-        return CommonError.error_toast("wrong link")
+        return CommonError.error_toast('wrong link')
 
     rss_id: Optional[int] = None
     # 检查是否存在rss
@@ -49,11 +49,11 @@ def add_rss_source():
     ).first()
     payload: Dict[AnyStr, any] = {}
     if exsits_relationship:
-        payload["rss_id"] = rss_id
+        payload['rss_id'] = rss_id
     else:
         rss_user = RssUserModel(user.id, rss_id)
         rss_user.save(True)
-        payload["rss_id"] = rss_id
+        payload['rss_id'] = rss_id
     RssTask.parser_feed.delay(source)
     return response_succ(body=payload)
 
@@ -65,7 +65,7 @@ def rss_list():
     """ 查看订阅列表 """
     params = parse_params(request)
     user: User = get_current_user()
-    pageinfo: Dict[AnyStr, int] = get_page_info()
+    pageinfo: PageInfo = get_page_info()
     result = (
         session.query(RssModel)
         .filter(
@@ -73,17 +73,47 @@ def rss_list():
                 RssUserModel.user_id == user.id, RssUserModel.rss_id == RssModel.rss_id
             )
         )
-        .offset(pageinfo["offset"])
-        .limit(pageinfo["limit"])
+        .offset(pageinfo.offset)
+        .limit(pageinfo.limit)
         .all()
     )
     payload: List[Dict[AnyStr, any]] = []
     for r in result:
         item = {
-            "rss_id": r.rss_id,
-            "rss_title": r.rss_title or '',
-            "rss_link": r.rss_link,
-            "rss_state": int(r.rss_state),
+            'rss_id': r.rss_id,
+            'rss_title': r.rss_title or '',
+            'rss_link': r.rss_link,
+            'rss_state': int(r.rss_state),
         }
         payload.append(item)
     return response_succ(payload)
+
+
+@api.route("/content/limit", methods=["GET"])
+@login_require
+@pages_info_requires
+def content_limit():
+    params = parse_params(request)
+    user: User = get_current_user()
+    pageinfo: PageInfo = get_page_info()
+    rss_content = (
+        session.query(RssContentModel)
+        .filter(RssContentModel.rss_id == RssModel.rss_id)
+        .filter(RssModel.rss_id == RssUserModel.rss_id)
+        .filter(RssUserModel.user_id == user.id)
+        .offset(pageinfo.offset)
+        .limit(pageinfo.limit)
+        .all()
+    )
+    payload: List[Dict[AnyStr, any]] = []
+    for r in rss_content:
+        item = {
+            'content_id': r.content_id,
+            'title': r.content_title or '',
+            'link': r.content_link,
+            'hover_image': r.content_image_cover or '',
+            'description': r.content_description
+        }
+        payload.append(item)
+    return response_succ(payload)
+

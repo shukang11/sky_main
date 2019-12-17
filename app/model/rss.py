@@ -64,7 +64,7 @@ class RssContentModel(db.Model, BaseModel):
         primary_key=True,
         autoincrement=True,
     )
-    content_base = Column(String(255), nullable=True)
+    rss_id = Column(INTEGER, comment='属于哪一个订阅的内容')
     content_link = Column(String(255), nullable=True)
     content_title = Column(String(255), nullable=True)
     content_description = Column(TEXT, nullable=True)
@@ -75,7 +75,7 @@ class RssContentModel(db.Model, BaseModel):
     def __init__(
         self,
         link: str,
-        baseurl: str,
+        pid: int,
         title: str,
         description: str,
         cover_img: str,
@@ -83,7 +83,7 @@ class RssContentModel(db.Model, BaseModel):
         add_time: Optional[AnyStr] = None,
     ):
         self.content_link = link
-        self.content_base = baseurl
+        self.rss_id = pid
         self.content_title = title
         self.published_time = published_time
         self.content_image_cover = cover_img
