@@ -4,7 +4,7 @@ import logging
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
 SQLALCHEMY_DATABASE_URI = os.environ.get(
-    "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3000/sky_main"
+    "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main"
 )
 
 REDIS_URI = os.environ.get('REDIS_URI', 'redis://localhost:6379/')
