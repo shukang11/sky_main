@@ -7,7 +7,7 @@ SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3000/sky_main"
 )
 
-
+REDIS_URI = os.environ.get('REDIS_URI', 'redis://localhost:6379/')
 class Config:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
@@ -41,10 +41,10 @@ class Config:
     LOGGING_DIR = os.path.join(root_dir, "logs")
 
     """Celery 配置"""
-    
-    CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+    from datetime import timedelta
+    CELERY_RESULT_BACKEND = REDIS_URI
 
-    BROKER_URL = 'redis://localhost:6379/0'
+    BROKER_URL = REDIS_URI + '0'
 
     CELERY_TIMEZONE='Asia/Shanghai'
 
@@ -53,6 +53,15 @@ class Config:
     CELERY_RESULT_SERIALIZER = 'json'
 
     CELERY_ACCEPT_CONTENT=['json']
+
+    # 定义定时任务
+    CELERYBEAT_SCHEDULE = {
+        'app.task.beat.parse_rsses': {
+            'task': 'app.task.beat.parse_rsses',
+            'schedule': timedelta(seconds=60*60*4),
+            'args': ()
+        }
+    }
     
     @classmethod
     def init_app(app, *args, **kwargs):
