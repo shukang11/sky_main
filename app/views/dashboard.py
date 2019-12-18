@@ -19,7 +19,7 @@ app.fetch_route(api, "/dashboard")
 logger = get_logger(__name__)
 
 
-@api.route("/info", methods=["GET"])
+@api.route("/info", methods=["POST", "GET"])
 @login_require
 def dashboard_info():
     user: User = get_current_user()
