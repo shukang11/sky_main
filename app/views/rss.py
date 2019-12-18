@@ -58,6 +58,29 @@ def add_rss_source():
     return response_succ(body=payload)
 
 
+@api.route("/remove", methods=["POST"])
+@login_require
+def remove():
+    """  尝试移除一个订阅源
+    Args:
+        rss_id: 移除的订阅源
+    """
+    params = parse_params(request)
+    user: User = get_current_user()
+    rss_id: Optional[int] = params.get("rss_id")
+    if not rss_id:
+        return CommonError.get_error(error_code=40000)
+
+    relation_ship: RssUserModel = RssUserModel.query.filter(
+        RssUserModel.user_id == user.id, RssUserModel.rss_id == rss_id
+    ).one()
+    if not relation_ship:
+        return CommonError.get_error(error_code=44000)
+    session.delete(relation_ship)
+    session.commit()
+    return response_succ()
+
+
 @api.route("/limit", methods=["POST"])
 @login_require
 @pages_info_requires

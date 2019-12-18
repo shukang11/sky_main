@@ -19,7 +19,6 @@ app.fetch_route(api, "/dashboard")
 logger = get_logger(__name__)
 
 
-@api.route("/info", methods=["POST", "GET"])
 @login_require
 def dashboard_info():
     user: User = get_current_user()
@@ -48,3 +47,6 @@ def dashboard_info():
     )
     payload.setdefault("rss_enable_count", rss_enable_count)
     return response_succ(body=payload)
+
+
+api.add_url_rule("/info", view_func=dashboard_info, methods=["GET", "POST"])
