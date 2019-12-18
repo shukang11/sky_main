@@ -10,10 +10,11 @@ application = DispatcherMiddleware(main_app, {})
 manager = Manager(main_app)
 manager.add_command('db', MigrateCommand)
 
+
 @manager.command
 def run_debug():
     main_app.run(host='localhost', port=9000, debug=True)
-    
+
+
 if __name__ == "__main__":
     manager.run()
-
