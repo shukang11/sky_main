@@ -5,7 +5,6 @@ import logging
 import sys
 from os import makedirs
 from os.path import dirname, exists
-
 from app.model import User
 
 """
@@ -13,7 +12,7 @@ Helper functions
 """
 
 
-def parse_params(request: TypeVar) -> Dict[AnyStr, Any]:
+def parse_params(request: Any) -> Dict[AnyStr, Any]:
     """  从一个Request实例中解析params参数
     Args:
         request: flask.request 实例对象
@@ -34,7 +33,7 @@ def get_current_user() -> Optional[User]:
         from flask import g
 
         return getattr(g, "current_user", None)
-    except expression as e:
+    except Exception as e:
         return None
 
 class PageInfo:
@@ -58,18 +57,18 @@ def get_page_info() -> Optional[PageInfo]:
         from flask import g
 
         return getattr(g, "pageinfo", None)
-    except expression as e:
+    except Exception as e:
         return None
 
 
-loggers: Dict[AnyStr, any] = {}
+loggers: Dict[str, Any] = {}
 
 LOG_ENABLE = True  # 是否开启日志
 LOG_LEVEL = "DEBUG"  # 日志输出等级
 LOG_FORMAT = "%(levelname)s - %(asctime)s - process: %(process)d - %(filename)s - %(name)s - %(lineno)d - %(module)s - %(message)s"  # 每条日志输出格式
 
 
-def get_logger(name: Optional[AnyStr] = None):
+def get_logger(name: Optional[str] = None):
     """  获得一个logger 实例，用来打印日志
     Args: 
         name: logger的名称

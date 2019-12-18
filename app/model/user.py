@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from uuid import uuid4
-from typing import Optional, AnyStr, TypeVar, Dict
+from typing import Optional, AnyStr, ClassVar, Dict, Any
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT, Table
 from app.utils import db
@@ -46,7 +46,7 @@ class User(db.Model, BaseModel):
         self.identifier = identifier or str(uuid4())
 
     @classmethod
-    def get_user(cls, uid: Optional[int] = None, identifier: Optional[AnyStr]=None) -> Optional[TypeVar]:
+    def get_user(cls, uid: Optional[int] = None, identifier: Optional[AnyStr]=None) -> Any:
         """  从表中查询用户实例
         Args:
             uid: 用户id
@@ -61,7 +61,7 @@ class User(db.Model, BaseModel):
         return None
 
     @property
-    def get_cache_key(self) -> AnyStr:
+    def get_cache_key(self) -> str:
         return (
             str(self.identifier)
             if self.identifier
@@ -69,10 +69,10 @@ class User(db.Model, BaseModel):
         )
 
     @property
-    def info_dict(self) -> Dict[AnyStr, any]:
+    def info_dict(self) -> Dict[str, Any]:
         """  将用户信息组装成字典
         """
-        payload: Dict[AnyStr, any] = {
+        payload: Dict[str, Any] = {
             "user_id": self.id,
             "sex": self.sex or 0,
             "email": self.email or "",

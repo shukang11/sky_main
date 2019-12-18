@@ -1,15 +1,15 @@
-from typing import Dict, Tuple, AnyStr, Optional, Union
+from typing import Dict, Tuple, AnyStr, Optional, Union, List, Any
 from flask import jsonify, Response
 
 
-def __check_request(method: AnyStr = "") -> AnyStr:
+def __check_request(method: str = "") -> str:
     """
     检查返回的错误信息是否合规则
     :param request: 返回的请求地址
     :return: 如果请求的地址为空，则返回空字符串
     """
-    methods = ['get', 'post', 'put', 'patch', 'delete', '*']
-    request = method.lower()
+    methods: List[str] = ['get', 'post', 'put', 'patch', 'delete', '*']
+    request: str = method.lower()
     request = request.strip()
     if len(request) == 0:
         return ""
@@ -24,11 +24,11 @@ def __check_request(method: AnyStr = "") -> AnyStr:
 
 
 def __error_handler(
-    msg: Optional[AnyStr] = None,
+    msg: Optional[str] = None,
     code: int = 404,
-    request: Optional[AnyStr] = None,
-    data: any = None
-) -> Dict[AnyStr, any]:
+    request: Optional[str] = None,
+    data: Any = None
+) -> Dict[str, Any]:
     """
     将不正确的参数格式化返回
     :param msg: 错误信息
@@ -36,13 +36,12 @@ def __error_handler(
     :param request: 下一步的链接(可选)
     :return: 组装的字典对象
     """
-    result = dict()
-    request = __check_request(request)
+    result: Dict[str, Any] = {}
+    request = __check_request(request or "")
     result["code"] = code
-    if msg:
-        result["msg"] = msg
+    result["msg"] = msg or ""
     if len(request) > 0:
-        result["request"] = request
+        result["request"] = request or ""
     result['data'] = data
     return result
 
@@ -51,7 +50,7 @@ def response_succ(
     body: Dict = {},
     status_code: int = 200,
     header: Optional[Dict] = None
-) -> Tuple[Dict[str, any], int, Dict[str, str]]:
+) -> Tuple[Dict[str, Any], int, Dict[str, str]]:
     """返回一个成功的报文
     对返回值进行统一的包装，避免有多种返回值格式
 
@@ -75,7 +74,7 @@ def response_succ(
     if status_code not in success_codes:
         raise ValueError("statusCode is not in successCodes")
     try:
-        result = {
+        result: Dict[str, Any] = {
             "data": body,
             "msg": "",
             "code": status_code
@@ -85,7 +84,7 @@ def response_succ(
     except Exception as _:
         raise ValueError("Unknown body")
     if header is None:
-        header: Dict[str, str] = {
+        header = {
             # 'Access-Control-Allow-Headers': 'Content-Type,Authorization',
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',

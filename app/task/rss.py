@@ -12,11 +12,11 @@ logger = get_logger(__name__)
 
 
 @celery_app.task(name="web_task.parser_feed_url")
-def parser_feed(feed_url: AnyStr) -> Dict[AnyStr, any]:
+def parser_feed(feed_url: AnyStr) -> bool:
     """  经过 `parser_feed_root`后将其中的数据调用 `save_feed_items`存储
     """
     result = parser_feed_root(feed_url)
-    save_feed_items(feed_url, result)
+    return save_feed_items(feed_url, result)
 
 
 def parser_feed_root(feed_url: AnyStr) -> Dict[AnyStr, any]:

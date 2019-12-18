@@ -29,7 +29,7 @@ def get_unix_time_tuple(
     return second
 
 
-def get_date_from_time_tuple(unix_time: str = get_unix_time_tuple(), formatter: str = '%Y-%m-%d %H:%M:%S') -> time:
+def get_date_from_time_tuple(unix_time: str = get_unix_time_tuple(), formatter: str = '%Y-%m-%d %H:%M:%S') -> str:
     """ translate unix time tuple to time
 
     get time from unix time
@@ -42,7 +42,7 @@ def get_date_from_time_tuple(unix_time: str = get_unix_time_tuple(), formatter: 
         a time type value, return time of incoming unix_time
     """
     if len(unix_time) == 13:
-        unix_time = int(unix_time) / 1000
+        unix_time = str(float(unix_time) / 1000)
     t = int(unix_time)
     time_locol = time.localtime(t)
     return time.strftime(formatter, time_locol)
@@ -135,7 +135,7 @@ def get_domain(url: str) -> str:
 def filter_all_img_src(content: str) -> List[str]:
     replace_pattern = r'<[img|IMG].*?>'  # img标签的正则式
     img_url_pattern = r'.+?src="(\S+)"'  # img_url的正则式
-    replaced_img_url_list = []
+    replaced_img_url_list: List[str] = []
     img_url_list = []
     need_replace_list = re.findall(replace_pattern, content)  # 找到所有的img标签
     for tag in need_replace_list:
@@ -152,5 +152,5 @@ def is_link(url: Optional[AnyStr]) -> bool:
     Return: 如果是合法的链接，返回 True ，否则返回 False
     """
     regex = r'(https?)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
-    result = re.match(regex, url)
+    result: Optional[re.Match] = re.match(regex, url)
     return False if not result else True
