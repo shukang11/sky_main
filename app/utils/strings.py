@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, AnyStr
 
 
 def get_unix_time_tuple(
-    date: datetime.datetime = datetime.datetime.now(),
+    date = datetime.datetime.now(),
     millisecond: bool = False
 ) -> str:
     """ get time tuple

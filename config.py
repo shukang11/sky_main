@@ -4,7 +4,7 @@ import logging
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
 SQLALCHEMY_DATABASE_URI = os.environ.get(
-    "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3000/sky_main"
+    "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main"
 )
 
 REDIS_URI = os.environ.get('REDIS_URI', 'redis://localhost:6379/')
@@ -73,7 +73,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SERVICE_TOKEN_SUFFIX = "im_token_suffix"
     # 打开数据库语句输出
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
     # 分页数量
     PAGE_LIMIT = 11
 

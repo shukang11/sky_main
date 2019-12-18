@@ -53,6 +53,7 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
     if not token and is_force:
         return CommonError.get_error(40000)
     if not token: return None
+    print(token)
     user_id: str = str(redisClient.get(token), encoding='utf8')
     identifier = user_id.replace('sky_user_cache_key_', '')
     user: User = User.get_user(identifier=identifier)
@@ -65,9 +66,8 @@ def pages_info_requires(func):
     @wraps(func)
     def decorator_view(*args, **kwargs):
         params = parse_params(request)
-        pages: int = int(params.get('pages') or 0)
+        pages: int = int(params.get('pages') or 1)
         limit: int = int(params.get('limit') or 11)
-
         info: PageInfo = PageInfo(
             max(pages, 0),
             max(limit, 1)

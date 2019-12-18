@@ -13,8 +13,8 @@ from app.task import rss as RssTask
 from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
 import app
 
-api = Blueprint('rss', __name__)
-app.fetch_route(api, '/rss')
+api = Blueprint("rss", __name__)
+app.fetch_route(api, "/rss")
 
 logger = get_logger(__name__)
 
@@ -27,11 +27,11 @@ def add_rss_source():
     """
     params = parse_params(request)
     user: User = get_current_user()
-    source = params.get('source')
+    source = params.get("source")
     if not source:
         return CommonError.get_error(40000)
     if not is_link(source):
-        return CommonError.error_toast('wrong link')
+        return CommonError.error_toast("wrong link")
 
     rss_id: Optional[int] = None
     # 检查是否存在rss
@@ -45,20 +45,20 @@ def add_rss_source():
         rss_id = rss.rss_id
     # 是否存在关系
     exsits_relationship: RssUserModel = RssUserModel.query.filter(
-        and_(RssUserModel.user_id == user.id, RssUserModel.rss_id == rss_id)
+        RssUserModel.user_id == user.id, RssUserModel.rss_id == rss_id
     ).first()
     payload: Dict[AnyStr, any] = {}
     if exsits_relationship:
-        payload['rss_id'] = rss_id
+        payload["rss_id"] = rss_id
     else:
         rss_user = RssUserModel(user.id, rss_id)
         rss_user.save(True)
-        payload['rss_id'] = rss_id
+        payload["rss_id"] = rss_id
     RssTask.parser_feed.delay(source)
     return response_succ(body=payload)
 
 
-@api.route("/limit/", methods=["GET"])
+@api.route("/limit", methods=["POST"])
 @login_require
 @pages_info_requires
 def rss_list():
@@ -69,9 +69,9 @@ def rss_list():
     result = (
         session.query(RssModel)
         .filter(
-            and_(
-                RssUserModel.user_id == user.id, RssUserModel.rss_id == RssModel.rss_id
-            )
+            RssModel.rss_id == RssUserModel.rss_id,
+            RssUserModel.user_id == user.id,
+            RssUserModel.rss_id == RssModel.rss_id,
         )
         .offset(pageinfo.offset)
         .limit(pageinfo.limit)
@@ -80,10 +80,10 @@ def rss_list():
     payload: List[Dict[AnyStr, any]] = []
     for r in result:
         item = {
-            'rss_id': r.rss_id,
-            'rss_title': r.rss_title or '',
-            'rss_link': r.rss_link,
-            'rss_state': int(r.rss_state),
+            "rss_id": r.rss_id,
+            "rss_title": r.rss_title or "",
+            "rss_link": r.rss_link,
+            "rss_state": int(r.rss_state),
         }
         payload.append(item)
     return response_succ(payload)
@@ -108,11 +108,11 @@ def content_limit():
     payload: List[Dict[AnyStr, any]] = []
     for r in rss_content:
         item = {
-            'content_id': r.content_id,
-            'title': r.content_title or '',
-            'link': r.content_link,
-            'hover_image': r.content_image_cover or '',
-            'description': r.content_description
+            "content_id": r.content_id,
+            "title": r.content_title or "",
+            "link": r.content_link,
+            "hover_image": r.content_image_cover or "",
+            "description": r.content_description,
         }
         payload.append(item)
     return response_succ(payload)
