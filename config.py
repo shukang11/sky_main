@@ -35,10 +35,12 @@ class Config:
 
     """ Logging 设置 """
     LOGGING_FORMATTER = (
-        "%(asctime)-15s %(levelname)s %(filename)s %(lineno)d %(process)d %(message)s"
-    )
+        "%(levelname)s - %(asctime)s - process: %(process)d - %(filename)s - %(name)s - %(lineno)d - %(module)s - %(message)s"
+    ) # 每条日志输出格式
     LOGGING_DATE_FORMATTER = "%a %d %b %Y %H:%M:%S"
     LOGGING_DIR = os.path.join(root_dir, "logs")
+    LOG_LEVEL = "DEBUG"  # 日志输出等级
+    LOG_ENABLE = True  # 是否开启日志
 
     """Celery 配置"""
     from datetime import timedelta

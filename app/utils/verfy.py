@@ -9,16 +9,20 @@ from app.utils import redisClient
 from app.utils import parse_params, PageInfo
 from app.model import User
 
+
 def login_option(func: Callable):
     """  处理请求中的用户信息，并封装到 `g` 中
     """
+
     @wraps(func)
     def decorator_view(*args, **kwargs):
         user_or_error: Optional[any] = get_user_from_request(request, False)
         if user_or_error:
             g.c_user = user_or_error
         return func(*args, **kwargs)
+
     return decorator_view
+
 
 def login_require(func: Callable):
     """
@@ -26,17 +30,20 @@ def login_require(func: Callable):
     在执行 func 之前，会检查权限
     :param func:  被执行的 router_func
     """
+
     @wraps(func)
     def decorator_view(*args, **kwargs):
-        userOrError: any = get_user_from_request(request, True)
-        if not userOrError:
+        user_or_error: any = get_user_from_request(request, True)
+        if not user_or_error:
             return UserError.get_error(40204)
-        if isinstance(userOrError, User):
-            g.current_user = userOrError
+        if isinstance(user_or_error, User):
+            g.current_user = user_or_error
         else:
-            return userOrError
+            return user_or_error
         return func(*args, **kwargs)
+
     return decorator_view
+
 
 def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[User], Tuple[str, int, Dict[str, str]]]:
     """  尝试从请求中获得用户
@@ -46,23 +53,22 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
     Return: 获得的用户实例，如果根据信息无法获得用户实例，则返回 None
     """
     params = parse_params(request)
-    alise: str = 'token'
-    token: Optional[str] = params.get(alise)
+    alice: str = 'token'
+    token: Optional[str] = params.get(alice)
     if not token:
-        token = session.get(alise) or request.cookies.get(alise)
+        token = session.get(alice) or request.cookies.get(alice)
     if not token and is_force:
         return CommonError.get_error(40000)
     if not token: return None
-    print(token)
     user_id: str = str(redisClient.get(token) or b'', encoding='utf8')
     identifier = user_id.replace('sky_user_cache_key_', '')
     user: User = User.get_user(identifier=identifier)
     return user
-    
+
 
 def pages_info_requires(func):
     """ 页面信息请求；分页等 """
-    
+
     @wraps(func)
     def decorator_view(*args, **kwargs):
         params = parse_params(request)
@@ -74,4 +80,5 @@ def pages_info_requires(func):
         )
         g.pageinfo = info
         return func(*args, **kwargs)
+
     return decorator_view

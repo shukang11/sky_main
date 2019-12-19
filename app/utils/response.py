@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, AnyStr, Optional, Union, List, Any
+from typing import Dict, Tuple, Optional, Union, List, Any
 from flask import jsonify, Response
 
 
@@ -47,7 +47,7 @@ def __error_handler(
 
 
 def response_succ(
-    body: Dict = {},
+    body: Union[Dict[str, Any], List[Any]] = {},
     status_code: int = 200,
     header: Optional[Dict] = None
 ) -> Tuple[Dict[str, Any], int, Dict[str, str]]:

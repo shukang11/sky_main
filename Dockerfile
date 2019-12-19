@@ -16,8 +16,10 @@ ENV SQLALCHEMY_DATABASE_URI mysql+pymysql://root:12345678@mysql:3306/sky_main
 
 ENV REDIS_URI redis://redis:6379/
 
+ENV FLASK_ENV production
+
 ENV PORT 8000
 
-EXPOSE 8000 5000
+EXPOSE 8000
 
 # CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8000", "manager:application"]

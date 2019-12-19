@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, AnyStr, Dict, List
+from typing import Any, Dict
 import datetime
-from flask import request, Blueprint
-from sqlalchemy import func
-from app.utils import UserError, CommonError
+from flask import Blueprint
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
-from app.utils import is_link, get_logger
-from app.task import rss as RssTask
+from app.utils import get_logger
 from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
 import app
 
@@ -23,7 +20,7 @@ logger = get_logger(__name__)
 @login_require
 def dashboard_info():
     user: User = get_current_user()
-    payload: Dict[AnyStr, str] = {}
+    payload: Dict[str, Any] = {}
     # 获得今日新增内容
     today = datetime.date.today()
     yesterday = today - datetime.timedelta(1)
