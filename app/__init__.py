@@ -45,9 +45,9 @@ def create_app(env: str) -> Flask:
     # 插件注册
     db.init_app(app)
     migrate_manager.init_app(app, db)
-    create_tables(app)
     configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')
+    logger.info(config_obj.UPLOAD_FOLDER)
     # 更新 celery 配置
     celery_app.conf.update(app.config)
     return app

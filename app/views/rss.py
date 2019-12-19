@@ -5,7 +5,12 @@ from flask import request, Blueprint
 from sqlalchemy import and_
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
-from app.utils import get_random_num, get_unix_time_tuple, getmd5
+from app.utils import (
+    get_random_num,
+    get_unix_time_tuple,
+    getmd5,
+    get_date_from_time_tuple,
+)
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
 from app.utils import is_link, get_logger
@@ -119,23 +124,35 @@ def content_limit():
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    rss_content = (
-        session.query(RssContentModel)
+    rss_content: Optional[List[RssContentModel]] = (
+        session.query(
+            RssContentModel.content_id,
+            RssContentModel.content_title,
+            RssContentModel.content_link,
+            RssContentModel.content_image_cover,
+            RssContentModel.content_description,
+            RssContentModel.add_time,
+            RssModel.rss_title.label("from_site"),
+        )
         .filter(RssContentModel.rss_id == RssModel.rss_id)
         .filter(RssModel.rss_id == RssUserModel.rss_id)
         .filter(RssUserModel.user_id == user.id)
+        .order_by(RssContentModel.add_time.desc())
         .offset(pageinfo.offset)
         .limit(pageinfo.limit)
         .all()
     )
     payload: List[Dict[AnyStr, any]] = []
     for r in rss_content:
+        print(r)
         item = {
             "content_id": r.content_id,
             "title": r.content_title or "",
             "link": r.content_link,
             "hover_image": r.content_image_cover or "",
             "description": r.content_description,
+            "add_time": get_date_from_time_tuple(r.add_time),
+            "from_site": r.from_site,
         }
         payload.append(item)
     return response_succ(payload)

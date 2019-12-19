@@ -31,7 +31,7 @@ def dashboard_info():
         .filter(RssContentModel.rss_id == RssModel.rss_id)
         .filter(RssModel.rss_id == RssUserModel.rss_id)
         .filter(RssUserModel.user_id == user.id)
-        .filter(RssContentModel.add_time >= today)
+        # .filter(RssContentModel.add_time >= today)
         .count()
     )
     payload.setdefault("today_rss_content_count", rss_content)

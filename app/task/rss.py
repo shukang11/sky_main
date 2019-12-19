@@ -1,6 +1,6 @@
 import re
 import time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Iterable, Callable
 import feedparser
 from app.utils import get_unix_time_tuple, filter_all_img_src
 from app.utils import celery_app
@@ -19,7 +19,7 @@ def parser_feed(feed_url: str) -> bool:
     return save_feed_items(feed_url, result)
 
 
-def parser_feed_root(feed_url: str) -> Dict[str, any]:
+def parser_feed_root(feed_url: str) -> Dict[str, Any]:
     """  解析rss网址,产生一个包含了 items 的字典，还需要对其中的信息进行处理
     Args:
         feed_url: rss的网址
@@ -27,7 +27,7 @@ def parser_feed_root(feed_url: str) -> Dict[str, any]:
         一个字典对象
     """
     feeds = feedparser.parse(feed_url)
-    payload: Dict[str, any] = {}
+    payload: Dict[str, Any] = {}
     if not hasattr(feeds, "version"):
         # 如果没有版本信息，无法判断是不是个xml，以及使用哪个版本的解析
         return payload
@@ -50,7 +50,7 @@ def parser_feed_root(feed_url: str) -> Dict[str, any]:
         subtitle = feeds.feed.subtitle or ""  # 副标题
     payload["subtitle"] = subtitle
 
-    result: List[Dict[str, any]] = []
+    result: List[Dict[str, Any]] = []
     for item in feeds["entries"]:
         r = {}
         for k in item:
@@ -60,7 +60,7 @@ def parser_feed_root(feed_url: str) -> Dict[str, any]:
     return payload
 
 
-def save_feed_items(feed_url: str, payload: Optional[Dict[str, any]]) -> bool:
+def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
     """  存储获得的订阅信息流
     Args:
         feed_url: 订阅的网址
@@ -75,13 +75,13 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, any]]) -> bool:
         "atom10": parse_atom,
         "rss10": parse_rss10,
     }
-    operator = operator_map.get(payload["version"]) or parse_rss20
+    operator: Callable[[Dict[str, Any]], Optional[Dict[str, Any]]] = operator_map.get(payload["version"]) or parse_rss20
     if not operator:
         return False
     version = payload["version"] if hasattr(payload, "version") else ""
     title = payload["title"] or "无标题"
     subtitle = payload["subtitle"]
-    items = payload["items"]
+    items: Iterable[Dict[str, Any]] = payload["items"]
     rss: RssModel = RssModel.query.filter(RssModel.rss_link == feed_url).one()
     rss.rss_title = title
     rss.version = payload.get('version')
@@ -89,15 +89,16 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, any]]) -> bool:
     for item in items:
         try:
             parsed = operator(item)
+            if not parsed: continue
             descript: str = ""
-            title: str = parsed.get("title") or ""
+            item_title: str = parsed.get("title") or ""
             link = parsed.get("link") or ""
             cover_img = parsed.get("cover_img") or ""
             published = parsed.get("published") or ""
             descript = parsed.get("descript") or ""
             timeLocal = get_unix_time_tuple()
             model: RssContentModel = RssContentModel(
-                link, rss.rss_id, title, descript, cover_img, published, timeLocal
+                link, rss.rss_id, item_title, descript, cover_img, published, timeLocal
             )
             model.save(True)
         except Exception as error:
@@ -107,7 +108,7 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, any]]) -> bool:
     return True
 
 
-def parse_rss20(item: Dict[Any, any]) -> Optional[Dict[Any, any]]:
+def parse_rss20(item: Dict[str, Any]) -> Optional[Dict[Any, Any]]:
     """  将信息流中的每一项进行格式化整理
     Args:
         item: 字典格式的输入
@@ -115,19 +116,18 @@ def parse_rss20(item: Dict[Any, any]) -> Optional[Dict[Any, any]]:
         整理后的字典对象，其中键值对是被整理过的
     """
     try:
-        result: Dict[str, any] = {}
+        result: Dict[str, Any] = {}
         title: str = item["title"]
         summary: str = item["summary"]
         imgs = filter_all_img_src(summary)
         link: str = item["link"] or item["id"] or ""
-        published = time.gmtime(time.time())
+        published = get_unix_time_tuple()
 
         if hasattr(item, "published"):
             published = item["published"]
         if hasattr(item, "published_parsed"):
             published = item["published_parsed"]
-
-        published = str(time.mktime(published))
+        
         result.setdefault("title", title)
         result.setdefault("descript", summary)
         result.setdefault("link", link)
@@ -139,9 +139,9 @@ def parse_rss20(item: Dict[Any, any]) -> Optional[Dict[Any, any]]:
         return None
 
 
-def parse_rss10(item: Dict[str, any]) -> Optional[Dict[str, any]]:
+def parse_rss10(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     return parse_rss20(item)
 
 
-def parse_atom(item: Dict[str, any]) -> Optional[Dict[str, any]]:
+def parse_atom(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     return parse_rss20(item)
