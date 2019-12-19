@@ -46,15 +46,15 @@ def get_user_from_request(request: Request, is_force: bool) -> Union[Optional[Us
     Return: 获得的用户实例，如果根据信息无法获得用户实例，则返回 None
     """
     params = parse_params(request)
-    alise: AnyStr = 'token'
-    token: Optional[AnyStr] = params.get(alise)
+    alise: str = 'token'
+    token: Optional[str] = params.get(alise)
     if not token:
         token = session.get(alise) or request.cookies.get(alise)
     if not token and is_force:
         return CommonError.get_error(40000)
     if not token: return None
     print(token)
-    user_id: str = str(redisClient.get(token), encoding='utf8')
+    user_id: str = str(redisClient.get(token) or b'', encoding='utf8')
     identifier = user_id.replace('sky_user_cache_key_', '')
     user: User = User.get_user(identifier=identifier)
     return user

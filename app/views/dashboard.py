@@ -3,6 +3,7 @@
 from typing import Optional, AnyStr, Dict, List
 import datetime
 from flask import request, Blueprint
+from sqlalchemy import func
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
@@ -19,23 +20,25 @@ app.fetch_route(api, "/dashboard")
 logger = get_logger(__name__)
 
 
-@api.route("/info", methods=["POST", "GET"])
 @login_require
 def dashboard_info():
     user: User = get_current_user()
     payload: Dict[AnyStr, str] = {}
     # 获得今日新增内容
-    today = get_unix_time_tuple(datetime.date.today())
-    logger.info(today)
-    rss_content = (
+    today = datetime.date.today()
+    yesterday = today - datetime.timedelta(1)
+    start_time = get_unix_time_tuple(yesterday)
+    rss_content_count: int = (
         session.query(RssContentModel)
-        .filter(RssContentModel.rss_id == RssModel.rss_id)
-        .filter(RssModel.rss_id == RssUserModel.rss_id)
-        .filter(RssUserModel.user_id == user.id)
-        .filter(RssContentModel.add_time >= today)
+        .filter(
+            RssContentModel.rss_id == RssModel.rss_id,
+            RssModel.rss_id == RssUserModel.rss_id,
+            RssUserModel.user_id == user.id,
+            RssContentModel.add_time >= start_time,
+        )
         .count()
     )
-    payload.setdefault("today_rss_content_count", rss_content)
+    payload.setdefault("today_rss_content_count", rss_content_count)
     # 当前有效订阅源
     rss_enable_count = (
         session.query(RssModel)
@@ -48,3 +51,6 @@ def dashboard_info():
     )
     payload.setdefault("rss_enable_count", rss_enable_count)
     return response_succ(body=payload)
+
+
+api.add_url_rule("/info", view_func=dashboard_info, methods=["GET", "POST"])
