@@ -3,7 +3,7 @@
 from typing import Optional, AnyStr, TypeVar, Dict
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT, Table
-from app.utils import db
+from app.utils import db, get_unix_time_tuple
 from .base import BaseModel
 
 
@@ -107,7 +107,7 @@ class RssReadRecordModel(db.Model, BaseModel):
     def __init__(self, url_id: int, user_id: int, read_at: Optional[AnyStr] = None):
         self.read_url_id = url_id
         self.read_user_id = user_id
-        self.read_time = read_at
+        self.read_time = read_at or get_unix_time_tuple()
 
 
 class TaskModel(db.Model, BaseModel):

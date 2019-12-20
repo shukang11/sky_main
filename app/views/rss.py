@@ -159,37 +159,14 @@ def content_limit():
     return response_succ(body=payload)
 
 
-@api.route("/content/<int:content_id>", methods=["GET"])
+@api.route("/content/reading/<int:content_id>", methods=["GET"])
 @login_require
 def rss_content(content_id: Optional[int] = None):
-    """  获得每个资源的内容
-    会有几种情况：
-        1. 是网页内容，则返回网页内容的主体
-        2. 单独的图片内容，则返回图片的链接
-        3. ...
+    """  添加阅读记录
     """
-    # 从redis读取，如果没有则从数据库加载
-    prefix: str = "rss_content_cache_key_"
-    prefix += str(content_id)
-    redis_result = redisClient.hmget(prefix, 'link', 'content')
-    link: Optional[str] = None
-    content: Optional[str] = None
-    query_result: RssContentModel = RssContentModel.query.filter(RssContentModel.content_id == content_id).one()
-    link = query_result.content_link
-    if not link:
-        return CommonError.get_error(9999)
-    import requests
-    session = requests.Session()
-    headers: Dict[str, str] = {
-        "User-Agent": 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 (KHTML, like Gecko) '
-                      'Chrome/77.0.3865.120 Safari/537.36',
-        "Accept-Language": "zh-Hans-CN;q=1, en-CN;q=0.9",
-    }
-    request_result = session.get(link, headers=headers)
-    cc = str(request_result.content or b'', encoding='utf8')
-    payload: Dict[str, Any] = {
-        'content': cc,
-        'link': link,
-    }
-    redisClient.hmset(prefix, payload)
-    return response_succ(body=payload)
+    user: User = get_current_user()
+    if not content_id:
+        return CommonError.get_error(error_code=40000)
+    record = RssReadRecordModel(url_id=content_id, user_id=user.id)
+    record.save(commit=True)
+    return response_succ()

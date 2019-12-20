@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from typing import Dict, AnyStr, Any, Optional
+from typing import Dict, AnyStr, Any, Optional, Type
 import logging
 import sys
 import os
-from app.model import User
 from config import configInfo, Config
 
 """
@@ -22,7 +21,7 @@ def parse_params(request: Any) -> Dict[AnyStr, Any]:
     return dict(params)
 
 
-def get_current_user() -> Optional[User]:
+def get_current_user() -> Any:
     """  尝试从当前服务实例中获得附加的用户实例
     g: flask 的 g 对象
     Return:
@@ -52,13 +51,13 @@ def get_page_info() -> Optional[PageInfo]:
     """
     from flask import g
 
-    return getattr(g, "pathinfo", None)
+    return getattr(g, "pageinfo", None)
 
 
-loggers: Dict[str, Any] = {}
+loggers: Dict[str, logging.Logger] = {}
 
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
+def get_logger(name: Optional[str] = None) -> Optional[logging.Logger]:
     """  获得一个logger 实例，用来打印日志
     Args: 
         name: logger的名称
@@ -71,7 +70,7 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
         name = __name__
 
     env: str = os.environ.get("FLASK_ENV", "default")
-    config: Config = configInfo.get(env)
+    config: Any = configInfo.get(env)
 
     if loggers.get(name):
         return loggers.get(name)

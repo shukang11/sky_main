@@ -4,6 +4,7 @@ from typing import Optional, AnyStr, TypeVar, Dict
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT
 from app.utils import db
+from app.utils import get_unix_time_tuple
 from .base import BaseModel
 from uuid import uuid4
 
@@ -54,4 +55,4 @@ class FileUserModel(db.Model, BaseModel):
         self.user_id = user_id
         self.file_id = file_id
         self.file_user_state = 1
-        self.add_time = add_time
+        self.add_time = add_time or get_unix_time_tuple()

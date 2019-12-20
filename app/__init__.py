@@ -7,18 +7,20 @@ from app.utils import db, configure_uploads, fileStorage
 from app.utils import migrate_manager, get_logger
 from app.utils import celery_app
 
-__all__ = ['create_app', 'fetch_route']
+__all__ = ['create_app', 'fetch_route', 'create_tables']
 
 logger = get_logger(__name__)
 
 route_list: List[Tuple[Blueprint, str]] = []
 
+
 def fetch_route(blueprint: Blueprint, prefix: str):
     t: Tuple[Blueprint, str] = (blueprint, prefix)
     route_list.append(t)
 
-def regist_blueprint(app: Flask, src_floder: str):
-    app_dir = path.join(root_dir, src_floder)
+
+def regist_blueprint(app: Flask, src_dir: str):
+    app_dir = path.join(root_dir, src_dir)
     for routes in listdir(app_dir):
         route_path: str = path.join(app_dir, routes)
         if (not path.isfile(route_path)) \
@@ -30,10 +32,12 @@ def regist_blueprint(app: Flask, src_floder: str):
     for blueprint in route_list:
         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
+
 def create_tables(app: Flask):
     from app.model import __all__
     with app.app_context():
         db.create_all()
+
 
 def create_app(env: str) -> Flask:
     assert(type(env) is str)

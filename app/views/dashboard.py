@@ -22,7 +22,7 @@ def dashboard_info():
     user: User = get_current_user()
     payload: Dict[str, Any] = {}
     # 获得今日新增内容
-    today = datetime.date.today()
+    today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(1)
     start_time = get_unix_time_tuple(yesterday)
     rss_content_count: int = (
@@ -47,6 +47,17 @@ def dashboard_info():
         .count()
     )
     payload.setdefault("rss_enable_count", rss_enable_count)
+    # 获得总数
+    rss_count: int = (
+        session.query(RssContentModel)
+        .filter(
+            RssContentModel.rss_id == RssModel.rss_id,
+            RssModel.rss_id == RssUserModel.rss_id,
+            RssUserModel.user_id == user.id,
+        )
+        .count()
+    )
+    payload.setdefault("rss_count", rss_count)
     return response_succ(body=payload)
 
 
