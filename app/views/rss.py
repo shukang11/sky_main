@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Any, Dict, List
+from typing import Optional, Any, Dict, List,Tuple
 from flask import request, Blueprint
 from app.utils import NoResultFound
 from app.utils import UserError, CommonError
@@ -133,18 +133,19 @@ def content_limit():
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    rss_content: Optional[List[RssContentModel]] = (
+    rss_content: Optional[List[Tuple[RssContentModel, str, Optional[RssContentCollectModel]]]] = (
         session.query(
-            RssContentModel.content_id,
-            RssContentModel.content_title,
-            RssContentModel.content_link,
-            RssContentModel.content_image_cover,
-            RssContentModel.add_time,
+            RssContentModel,
             RssModel.rss_title.label("from_site"),
+            RssContentCollectModel,
         )
-        .filter(RssContentModel.rss_id == RssModel.rss_id)
-        .filter(RssModel.rss_id == RssUserModel.rss_id)
-        .filter(RssUserModel.user_id == user.id)
+        .filter(
+            RssContentModel.rss_id == RssModel.rss_id,
+            RssModel.rss_id == RssUserModel.rss_id,
+            RssUserModel.user_id == user.id,
+            RssContentCollectModel.user_id == user.id,
+            RssContentCollectModel.collect_id == RssContentCollectModel.collect_id,
+        )
         .order_by(RssContentModel.add_time.desc())
         .offset(pageinfo.offset)
         .limit(pageinfo.limit)
@@ -152,13 +153,15 @@ def content_limit():
     )
     payload: List[Dict[str, Any]] = []
     for r in rss_content:
+        r, from_site, collect = r
         item = {
             "content_id": r.content_id,
             "title": r.content_title or "",
             "link": r.content_link,
             "hover_image": r.content_image_cover or "",
             "add_time": get_date_from_time_tuple(r.add_time),
-            "from_site": r.from_site,
+            "from_site": from_site,
+            "isCollected": not bool(collect.is_delete)
         }
         payload.append(item)
     return response_succ(body=payload)
@@ -180,22 +183,27 @@ def rss_content(content_id: Optional[int] = None):
 @api.route("/content/toggleCollect/<int:content_id>", methods=["POST"])
 @login_require
 def rss_collect(content_id: Optional[int] = None):
-    """  收藏内容
+    """  收藏内容或取消收藏
     """
     user: User = get_current_user()
     if not content_id:
         return CommonError.get_error(error_code=40000)
+    model: RssContentCollectModel
     try:
-        msg: str = "取消成功"
-        model: Optional[RssContentCollectModel] = RssContentCollectModel.query.filter(
+        model = RssContentCollectModel.query.filter(
             RssContentCollectModel.user_id == user.id,
             RssContentCollectModel.collect_id == content_id,
         ).one()
-        model.is_delete = 1
+        isDelete: bool = bool(model.is_delete)
+        model.is_delete = int(not isDelete)
     except NoResultFound:
-        msg = "收藏成功"
         model = RssContentCollectModel(content_id, user.id)
+    session.flush()
+    toast: str = "取消成功" if model.is_delete else "收藏成功"
+    result: Dict[str, Any] = {
+        "contentId": content_id,
+        "userId": user.id,
+        "isDeleted": model.is_delete,
+    }
     model.save(commit=True)
-    return response_succ(toast=msg)
-
-    
+    return response_succ(body=result, toast=toast)

@@ -57,7 +57,7 @@ def get_page_info() -> Optional[PageInfo]:
 loggers: Dict[str, logging.Logger] = {}
 
 
-def get_logger(name: Optional[str] = None) -> Optional[logging.Logger]:
+def get_logger(name: Optional[str] = None) -> logging.Logger:
     """  获得一个logger 实例，用来打印日志
     Args: 
         name: logger的名称
