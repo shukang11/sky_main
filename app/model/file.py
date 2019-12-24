@@ -23,6 +23,7 @@ class FileModel(db.Model, BaseModel):
     file_hash = Column(String(64), nullable=False, comment="文件hash值")
     file_name = Column(String(255), nullable=True, comment="文件名")
     file_type = Column(String(32), nullable=True, comment="文件类型")
+    file_is_delete = Column(SMALLINT, nullable=True, default=1, comment='删除状态')
 
     def __init__(
         self,

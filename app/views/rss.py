@@ -2,6 +2,7 @@
 
 from typing import Optional, Any, Dict, List
 from flask import request, Blueprint
+from app.utils import NoResultFound
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import (
@@ -12,7 +13,14 @@ from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
 from app.utils import is_link, get_logger, redisClient
 from app.task import rss as RssTask
-from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
+from app.model import (
+    User,
+    RssContentModel,
+    RssModel,
+    RssReadRecordModel,
+    RssUserModel,
+    RssContentCollectModel,
+)
 import app
 
 api = Blueprint("rss", __name__)
@@ -131,7 +139,6 @@ def content_limit():
             RssContentModel.content_title,
             RssContentModel.content_link,
             RssContentModel.content_image_cover,
-            RssContentModel.content_description,
             RssContentModel.add_time,
             RssModel.rss_title.label("from_site"),
         )
@@ -145,13 +152,11 @@ def content_limit():
     )
     payload: List[Dict[str, Any]] = []
     for r in rss_content:
-        print(r)
         item = {
             "content_id": r.content_id,
             "title": r.content_title or "",
             "link": r.content_link,
             "hover_image": r.content_image_cover or "",
-            "description": r.content_description,
             "add_time": get_date_from_time_tuple(r.add_time),
             "from_site": r.from_site,
         }
@@ -159,7 +164,7 @@ def content_limit():
     return response_succ(body=payload)
 
 
-@api.route("/content/reading/<int:content_id>", methods=["GET"])
+@api.route("/content/reading/<int:content_id>", methods=["POST"])
 @login_require
 def rss_content(content_id: Optional[int] = None):
     """  添加阅读记录
@@ -170,3 +175,27 @@ def rss_content(content_id: Optional[int] = None):
     record = RssReadRecordModel(url_id=content_id, user_id=user.id)
     record.save(commit=True)
     return response_succ()
+
+
+@api.route("/content/toggleCollect/<int:content_id>", methods=["POST"])
+@login_require
+def rss_collect(content_id: Optional[int] = None):
+    """  收藏内容
+    """
+    user: User = get_current_user()
+    if not content_id:
+        return CommonError.get_error(error_code=40000)
+    try:
+        msg: str = "取消成功"
+        model: Optional[RssContentCollectModel] = RssContentCollectModel.query.filter(
+            RssContentCollectModel.user_id == user.id,
+            RssContentCollectModel.collect_id == content_id,
+        ).one()
+        model.is_delete = 1
+    except NoResultFound:
+        msg = "收藏成功"
+        model = RssContentCollectModel(content_id, user.id)
+    model.save(commit=True)
+    return response_succ(toast=msg)
+
+    

@@ -51,6 +51,7 @@ class FileStoreView(MethodView):
                         identifier=identifier, extension=extension
                     ),
                 )
+                
                 payload.append(model)
                 session.add(model)
                 session.flush()

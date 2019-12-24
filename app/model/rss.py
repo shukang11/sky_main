@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, AnyStr, TypeVar, Dict
+from typing import Optional, TypeVar, Dict
 from sqlalchemy import Column, ForeignKey, String, Sequence
 from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT, Table
 from app.utils import db, get_unix_time_tuple
@@ -25,7 +25,7 @@ class RssModel(db.Model, BaseModel):
     rss_title = Column(String(255), nullable=True, comment="订阅的标题")
     rss_state = Column(SMALLINT, nullable=True, comment="# 1 创建(未验证) 2 有效 3 失效")
 
-    def __init__(self, link: str, add_time: Optional[AnyStr] = None):
+    def __init__(self, link: str, add_time: Optional[str] = None):
         self.rss_link = link
         self.rss_state = 1
         self.add_time = add_time
@@ -47,7 +47,7 @@ class RssUserModel(db.Model, BaseModel):
     add_time = Column(String(20), nullable=True)
     rss_user_state = Column(SMALLINT, nullable=True, comment="# 1 创建(未验证) 2 有效 3 失效")
 
-    def __init__(self, user_id: int, rss_id: int, add_time: Optional[AnyStr] = None):
+    def __init__(self, user_id: int, rss_id: int, add_time: Optional[str] = None):
         self.user_id = user_id
         self.rss_id = rss_id
         self.rss_user_state = 1
@@ -64,7 +64,7 @@ class RssContentModel(db.Model, BaseModel):
         primary_key=True,
         autoincrement=True,
     )
-    rss_id = Column(INTEGER, comment='属于哪一个订阅的内容')
+    rss_id = Column(INTEGER, comment="属于哪一个订阅的内容")
     content_link = Column(String(255), nullable=True)
     content_title = Column(String(255), nullable=True)
     content_description = Column(TEXT, nullable=True)
@@ -80,7 +80,7 @@ class RssContentModel(db.Model, BaseModel):
         description: str,
         cover_img: str,
         published_time: str,
-        add_time: Optional[AnyStr] = None,
+        add_time: Optional[str] = None,
     ):
         self.content_link = link
         self.rss_id = pid
@@ -104,21 +104,28 @@ class RssReadRecordModel(db.Model, BaseModel):
     read_user_id = Column(INTEGER)
     read_time = Column(String(20), nullable=True)
 
-    def __init__(self, url_id: int, user_id: int, read_at: Optional[AnyStr] = None):
+    def __init__(self, url_id: int, user_id: int, read_at: Optional[str] = None):
         self.read_url_id = url_id
         self.read_user_id = user_id
         self.read_time = read_at or get_unix_time_tuple()
 
 
-class TaskModel(db.Model, BaseModel):
-    """ 包含了任务发起者，开始时间, 结束时间 状态等 """
-    __tablename__ = 'bao_task_record'
+class RssContentCollectModel(db.Model, BaseModel):
+    """ rss内容收藏记录 """
+    __tablename__ = "bao_rss_content_collect"
 
-    task_id = Column(String(125), primary_key=True)
-    tast_name = Column(String(255))
-    argsrepr = Column(String(255))
-    kwargs = Column(String(255))
-    user_id = Column(INTEGER)
-    begin_at = Column(String(20))
-    end_at = Column(String(20))
-    is_succ = Column(SMALLINT)
+    user_id = Column(INTEGER, nullable=True)
+    collect_id = Column(
+        INTEGER,
+        Sequence(start=1, increment=1, name="collect_id_sep"),
+        primary_key=True,
+        autoincrement=True,
+    )
+    collect_time = Column(String(20), nullable=True)
+    is_delete = Column(SMALLINT, nullable=True, default=0, comment="1 删除 0 未删除")
+
+    def __init__(self, collect_id: int, user_id: int, time: Optional[str] = None):
+        self.collect_id = collect_id
+        self.user_id = user_id
+        self.collect_time = time or get_unix_time_tuple()
+        self.is_delete = 0

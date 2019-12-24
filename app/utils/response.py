@@ -49,7 +49,8 @@ def __error_handler(
 def response_succ(
     body: Union[Dict[str, Any], List[Any]] = {},
     status_code: int = 200,
-    header: Optional[Dict] = None
+    header: Optional[Dict] = None,
+    toast: Optional[str] = None
 ) -> Tuple[Dict[str, Any], int, Dict[str, str]]:
     """返回一个成功的报文
     对返回值进行统一的包装，避免有多种返回值格式
@@ -76,7 +77,7 @@ def response_succ(
     try:
         result: Dict[str, Any] = {
             "data": body,
-            "msg": "",
+            "msg": toast or "",
             "code": status_code
         }
         if result:
