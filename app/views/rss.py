@@ -3,7 +3,7 @@
 from typing import Optional, Any, Dict, List, Tuple
 from flask import request, Blueprint
 from sqlalchemy import and_, outerjoin
-from app.utils import NoResultFound
+from app.utils import NoResultFound, MultipleResultsFound
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import (
@@ -46,10 +46,15 @@ def add_rss_source():
 
     rss_id: Optional[int]
     # 检查是否存在rss
-    exists_rss: RssModel = RssModel.query.filter(RssModel.rss_link == source).first()
-    if exists_rss:
-        rss_id = exists_rss.rss_id
-    else:
+    try:
+        exists_rss: RssModel = RssModel.query.filter(RssModel.rss_link == source).one()
+        if exists_rss:
+            rss_id = exists_rss.rss_id
+    except MultipleResultsFound as e:
+        # 如果存在多个记录，要抛出
+        logger.error(e)
+        return response_error(error_code=9999)
+    except NoResultFound:
         rss = RssModel(source, add_time=get_unix_time_tuple())
         session.add(rss)
         session.flush()
