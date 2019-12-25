@@ -95,10 +95,9 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
             link = parsed.get("link") or ""
             cover_img = parsed.get("cover_img") or ""
             published = parsed.get("published") or ""
-            descript = parsed.get("descript") or ""
             timeLocal = get_unix_time_tuple()
             model: RssContentModel = RssContentModel(
-                link, rss.rss_id, item_title, descript, cover_img, published, timeLocal
+                link, rss.rss_id, item_title, cover_img, published, timeLocal
             )
             model.save(True)
         except Exception as error:

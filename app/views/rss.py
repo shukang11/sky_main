@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Any, Dict, List,Tuple
+from typing import Optional, Any, Dict, List, Tuple
 from flask import request, Blueprint
+from sqlalchemy import and_, outerjoin
 from app.utils import NoResultFound
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
@@ -133,35 +134,38 @@ def content_limit():
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    rss_content: Optional[List[Tuple[RssContentModel, str, Optional[RssContentCollectModel]]]] = (
-        session.query(
-            RssContentModel,
-            RssModel.rss_title.label("from_site"),
+    rss_content: List[Tuple[RssContentModel, Optional[str], Optional[int]]] = (
+        session.query(RssContentModel, RssContentCollectModel.is_delete.label('isDeleted'))
+        .join(
+            RssUserModel,
+            and_(
+                RssContentModel.rss_id == RssUserModel.rss_id,
+                RssUserModel.user_id == user.id,
+            ),
+        )
+        .outerjoin(
             RssContentCollectModel,
+            and_(
+                RssUserModel.user_id == RssContentCollectModel.user_id,
+                RssContentModel.content_id == RssContentCollectModel.content_id,
+            ),
         )
-        .filter(
-            RssContentModel.rss_id == RssModel.rss_id,
-            RssModel.rss_id == RssUserModel.rss_id,
-            RssUserModel.user_id == user.id,
-            RssContentCollectModel.user_id == user.id,
-            RssContentCollectModel.collect_id == RssContentCollectModel.collect_id,
-        )
-        .order_by(RssContentModel.add_time.desc())
         .offset(pageinfo.offset)
         .limit(pageinfo.limit)
         .all()
     )
     payload: List[Dict[str, Any]] = []
-    for r in rss_content:
-        r, from_site, collect = r
+    for item in rss_content:
+        r, isDeleted = item
+        if not isDeleted: 
+            isDeleted = True
         item = {
             "content_id": r.content_id,
             "title": r.content_title or "",
             "link": r.content_link,
             "hover_image": r.content_image_cover or "",
             "add_time": get_date_from_time_tuple(r.add_time),
-            "from_site": from_site,
-            "isCollected": not bool(collect.is_delete)
+            "isCollected": not isDeleted
         }
         payload.append(item)
     return response_succ(body=payload)
@@ -192,7 +196,7 @@ def rss_collect(content_id: Optional[int] = None):
     try:
         model = RssContentCollectModel.query.filter(
             RssContentCollectModel.user_id == user.id,
-            RssContentCollectModel.collect_id == content_id,
+            RssContentCollectModel.content_id == content_id,
         ).one()
         isDelete: bool = bool(model.is_delete)
         model.is_delete = int(not isDelete)

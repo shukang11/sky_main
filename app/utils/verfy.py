@@ -75,7 +75,7 @@ def pages_info_requires(func):
     @wraps(func)
     def decorator_view(*args, **kwargs):
         params = parse_params(request)
-        pages: int = int(params.get("pages") or 1)
+        pages: int = int(params.get("pages") or 0)
         limit: int = int(params.get("limit") or 11)
         info: PageInfo = PageInfo(max(pages, 0), max(limit, 1))
         g.pageinfo = info

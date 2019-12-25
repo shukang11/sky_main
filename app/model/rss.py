@@ -67,7 +67,6 @@ class RssContentModel(db.Model, BaseModel):
     rss_id = Column(INTEGER, comment="属于哪一个订阅的内容")
     content_link = Column(String(255), nullable=True)
     content_title = Column(String(255), nullable=True)
-    content_description = Column(TEXT, nullable=True)
     content_image_cover = Column(String(255), nullable=True)
     published_time = Column(String(64), nullable=True)
     add_time = Column(String(20), nullable=True)
@@ -77,7 +76,6 @@ class RssContentModel(db.Model, BaseModel):
         link: str,
         pid: int,
         title: str,
-        description: str,
         cover_img: str,
         published_time: str,
         add_time: Optional[str] = None,
@@ -87,7 +85,6 @@ class RssContentModel(db.Model, BaseModel):
         self.content_title = title
         self.published_time = published_time
         self.content_image_cover = cover_img
-        self.content_description = description
         self.add_time = add_time
 
 
@@ -115,17 +112,17 @@ class RssContentCollectModel(db.Model, BaseModel):
     __tablename__ = "bao_rss_content_collect"
 
     user_id = Column(INTEGER, nullable=True)
-    collect_id = Column(
+    content_id = Column(
         INTEGER,
-        Sequence(start=1, increment=1, name="collect_id_sep"),
+        Sequence(start=1, increment=1, name="content_id_sep"),
         primary_key=True,
         autoincrement=True,
     )
     collect_time = Column(String(20), nullable=True)
     is_delete = Column(SMALLINT, nullable=True, default=0, comment="1 删除 0 未删除")
 
-    def __init__(self, collect_id: int, user_id: int, time: Optional[str] = None):
-        self.collect_id = collect_id
+    def __init__(self, content_id: int, user_id: int, time: Optional[str] = None):
+        self.content_id = content_id
         self.user_id = user_id
         self.collect_time = time or get_unix_time_tuple()
         self.is_delete = 0

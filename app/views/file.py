@@ -43,15 +43,14 @@ class FileStoreView(MethodView):
                 # uuid
                 identifier = str(uuid4()).replace("-", "")
                 model: FileModel = FileModel(
-                    filename=filename, extension=extension, identifier=identifier
+                    filename, file_type=extension, file_hash=identifier
                 )
                 name: str = fileStorage.save(
-                    model,
+                    file,
                     name="{identifier}.{extension}".format(
                         identifier=identifier, extension=extension
                     ),
                 )
-                
                 payload.append(model)
                 session.add(model)
                 session.flush()

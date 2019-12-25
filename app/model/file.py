@@ -27,11 +27,11 @@ class FileModel(db.Model, BaseModel):
 
     def __init__(
         self,
-        name: str,
+        file_name: str,
         file_type: Optional[str] = None,
         file_hash: Optional[str] = None,
     ):
-        self.file_name = name
+        self.file_name = file_name
         self.file_type = file_type
         self.file_hash = file_hash or str(uuid4()).replace("-", "")
 
