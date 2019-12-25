@@ -5,9 +5,9 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound, \
     UnmappedColumnError
 from sqlalchemy import Sequence
 from flask_sqlalchemy import SQLAlchemy
-from flask_uploads import UploadSet, DEFAULTS, configure_uploads
+from flask_uploads import UploadSet, DEFAULTS, AUDIO, configure_uploads
 from redis import ConnectionPool, Redis
-
+from config import REDIS_URI
 from flask_migrate import Migrate
 
 from celery import Celery
@@ -20,9 +20,7 @@ session = db.session
 
 celery_app = Celery(__name__)
 
-fileStorage = UploadSet(extensions=DEFAULTS)
-
-REDIS_URI = os.environ.get('REDIS_URI', 'redis://localhost:6379/')
+fileStorage = UploadSet(extensions=DEFAULTS+AUDIO)
 
 __pool = ConnectionPool.from_url(url=REDIS_URI)
 redisClient = Redis(connection_pool=__pool)

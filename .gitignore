@@ -137,3 +137,4 @@ migrations/
 
 #sky_main
 logs/
+disk/

@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, AnyStr, Dict, List
+from typing import Any, Dict
 import datetime
-from flask import request, Blueprint
-from sqlalchemy import func
-from app.utils import UserError, CommonError
+from flask import Blueprint
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
-from app.utils import is_link, get_logger
-from app.task import rss as RssTask
+from app.utils import get_logger
 from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
 import app
 
@@ -23,9 +20,9 @@ logger = get_logger(__name__)
 @login_require
 def dashboard_info():
     user: User = get_current_user()
-    payload: Dict[AnyStr, str] = {}
+    payload: Dict[str, Any] = {}
     # 获得今日新增内容
-    today = datetime.date.today()
+    today = datetime.datetime.now()
     yesterday = today - datetime.timedelta(1)
     start_time = get_unix_time_tuple(yesterday)
     rss_content_count: int = (
@@ -50,6 +47,17 @@ def dashboard_info():
         .count()
     )
     payload.setdefault("rss_enable_count", rss_enable_count)
+    # 获得总数
+    rss_count: int = (
+        session.query(RssContentModel)
+        .filter(
+            RssContentModel.rss_id == RssModel.rss_id,
+            RssModel.rss_id == RssUserModel.rss_id,
+            RssUserModel.user_id == user.id,
+        )
+        .count()
+    )
+    payload.setdefault("rss_count", rss_count)
     return response_succ(body=payload)
 
 

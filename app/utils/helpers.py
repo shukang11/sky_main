@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from typing import TypeVar, Dict, AnyStr, Any, Optional
+from typing import Dict, AnyStr, Any, Optional, Type
 import logging
 import sys
-from os import makedirs
-from os.path import dirname, exists
-from app.model import User
+import os
+from config import configInfo, Config
 
 """
 Helper functions
@@ -22,19 +21,16 @@ def parse_params(request: Any) -> Dict[AnyStr, Any]:
     return dict(params)
 
 
-def get_current_user() -> Optional[User]:
+def get_current_user() -> Any:
     """  尝试从当前服务实例中获得附加的用户实例
-    Args:
-        g: flask 的 g 对象
+    g: flask 的 g 对象
     Return:
         如果其中附加了用户实例，则返回，如果没有就返回None
     """
-    try:
-        from flask import g
+    from flask import g
 
-        return getattr(g, "current_user", None)
-    except Exception as e:
-        return None
+    return getattr(g, "current_user", None)
+
 
 class PageInfo:
     page: int = 0
@@ -46,29 +42,22 @@ class PageInfo:
         self.limit = limit
         self.offset = page * limit
 
+
 def get_page_info() -> Optional[PageInfo]:
     """  尝试从当前服务实例中获得附加的页面实例
-    Args:
-        g: flask 的 g 对象
+    g: flask 的 g 对象
     Return:
         如果其中附加了页面实例，则返回，如果没有就返回None
     """
-    try:
-        from flask import g
+    from flask import g
 
-        return getattr(g, "pageinfo", None)
-    except Exception as e:
-        return None
+    return getattr(g, "pageinfo", None)
 
 
-loggers: Dict[str, Any] = {}
-
-LOG_ENABLE = True  # 是否开启日志
-LOG_LEVEL = "DEBUG"  # 日志输出等级
-LOG_FORMAT = "%(levelname)s - %(asctime)s - process: %(process)d - %(filename)s - %(name)s - %(lineno)d - %(module)s - %(message)s"  # 每条日志输出格式
+loggers: Dict[str, logging.Logger] = {}
 
 
-def get_logger(name: Optional[str] = None):
+def get_logger(name: Optional[str] = None) -> logging.Logger:
     """  获得一个logger 实例，用来打印日志
     Args: 
         name: logger的名称
@@ -80,15 +69,18 @@ def get_logger(name: Optional[str] = None):
     if not name:
         name = __name__
 
+    env: str = os.environ.get("FLASK_ENV", "default")
+    config: Any = configInfo.get(env)
+
     if loggers.get(name):
         return loggers.get(name)
 
     logger = logging.getLogger(name=name)
-    logger.setLevel(LOG_LEVEL)
+    logger.setLevel(config.LOG_LEVEL)
 
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(LOG_LEVEL)
-    formatter = logging.Formatter(LOG_FORMAT)
+    stream_handler.setLevel(config.LOG_LEVEL)
+    formatter = logging.Formatter(config.LOGGING_FORMATTER)
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 

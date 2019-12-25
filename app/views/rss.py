@@ -1,21 +1,27 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional, AnyStr, Dict, List
+from typing import Optional, Any, Dict, List, Tuple
 from flask import request, Blueprint
-from sqlalchemy import and_
+from sqlalchemy import and_, outerjoin
+from app.utils import NoResultFound, MultipleResultsFound
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import (
-    get_random_num,
     get_unix_time_tuple,
-    getmd5,
     get_date_from_time_tuple,
 )
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
-from app.utils import is_link, get_logger
+from app.utils import is_link, get_logger, redisClient
 from app.task import rss as RssTask
-from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
+from app.model import (
+    User,
+    RssContentModel,
+    RssModel,
+    RssReadRecordModel,
+    RssUserModel,
+    RssContentCollectModel,
+)
 import app
 
 api = Blueprint("rss", __name__)
@@ -38,12 +44,17 @@ def add_rss_source():
     if not is_link(source):
         return CommonError.error_toast("wrong link")
 
-    rss_id: Optional[int] = None
+    rss_id: Optional[int]
     # 检查是否存在rss
-    exists_rss: RssModel = RssModel.query.filter(RssModel.rss_link == source).first()
-    if exists_rss:
-        rss_id = exists_rss.rss_id
-    else:
+    try:
+        exists_rss: RssModel = RssModel.query.filter(RssModel.rss_link == source).one()
+        if exists_rss:
+            rss_id = exists_rss.rss_id
+    except MultipleResultsFound as e:
+        # 如果存在多个记录，要抛出
+        logger.error(e)
+        return response_error(error_code=9999)
+    except NoResultFound:
         rss = RssModel(source, add_time=get_unix_time_tuple())
         session.add(rss)
         session.flush()
@@ -52,7 +63,7 @@ def add_rss_source():
     exsits_relationship: RssUserModel = RssUserModel.query.filter(
         RssUserModel.user_id == user.id, RssUserModel.rss_id == rss_id
     ).first()
-    payload: Dict[AnyStr, any] = {}
+    payload: Dict[str, any] = {}
     if exsits_relationship:
         payload["rss_id"] = rss_id
     else:
@@ -86,11 +97,11 @@ def remove():
     return response_succ()
 
 
-@api.route("/limit", methods=["POST"])
+@api.route("/limit", methods=["GET"])
 @login_require
 @pages_info_requires
 def rss_list():
-    """ 查看订阅列表 """
+    """ 查看订阅源列表 """
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
@@ -105,7 +116,7 @@ def rss_list():
         .limit(pageinfo.limit)
         .all()
     )
-    payload: List[Dict[AnyStr, any]] = []
+    payload: List[Dict[str, Any]] = []
     for r in result:
         item = {
             "rss_id": r.rss_id,
@@ -114,46 +125,94 @@ def rss_list():
             "rss_state": int(r.rss_state),
         }
         payload.append(item)
-    return response_succ(payload)
+    return response_succ(body=payload)
 
 
 @api.route("/content/limit", methods=["GET"])
 @login_require
 @pages_info_requires
 def content_limit():
+    """  获得订阅内容的列表
+    Args:
+        包含分页信息
+    """
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    rss_content: Optional[List[RssContentModel]] = (
-        session.query(
-            RssContentModel.content_id,
-            RssContentModel.content_title,
-            RssContentModel.content_link,
-            RssContentModel.content_image_cover,
-            RssContentModel.content_description,
-            RssContentModel.add_time,
-            RssModel.rss_title.label("from_site"),
+    rss_content: List[Tuple[RssContentModel, Optional[str], Optional[int]]] = (
+        session.query(RssContentModel, RssContentCollectModel.is_delete.label('isDeleted'))
+        .join(
+            RssUserModel,
+            and_(
+                RssContentModel.rss_id == RssUserModel.rss_id,
+                RssUserModel.user_id == user.id,
+            ),
         )
-        .filter(RssContentModel.rss_id == RssModel.rss_id)
-        .filter(RssModel.rss_id == RssUserModel.rss_id)
-        .filter(RssUserModel.user_id == user.id)
-        .order_by(RssContentModel.add_time.desc())
+        .outerjoin(
+            RssContentCollectModel,
+            and_(
+                RssUserModel.user_id == RssContentCollectModel.user_id,
+                RssContentModel.content_id == RssContentCollectModel.content_id,
+            ),
+        )
         .offset(pageinfo.offset)
         .limit(pageinfo.limit)
         .all()
     )
-    payload: List[Dict[AnyStr, any]] = []
-    for r in rss_content:
-        print(r)
+    payload: List[Dict[str, Any]] = []
+    for item in rss_content:
+        r, isDeleted = item
+        if not isDeleted: 
+            isDeleted = True
         item = {
             "content_id": r.content_id,
             "title": r.content_title or "",
             "link": r.content_link,
             "hover_image": r.content_image_cover or "",
-            "description": r.content_description,
             "add_time": get_date_from_time_tuple(r.add_time),
-            "from_site": r.from_site,
+            "isCollected": not isDeleted
         }
         payload.append(item)
-    return response_succ(payload)
+    return response_succ(body=payload)
 
+
+@api.route("/content/reading/<int:content_id>", methods=["POST"])
+@login_require
+def rss_content(content_id: Optional[int] = None):
+    """  添加阅读记录
+    """
+    user: User = get_current_user()
+    if not content_id:
+        return CommonError.get_error(error_code=40000)
+    record = RssReadRecordModel(url_id=content_id, user_id=user.id)
+    record.save(commit=True)
+    return response_succ()
+
+
+@api.route("/content/toggleCollect/<int:content_id>", methods=["POST"])
+@login_require
+def rss_collect(content_id: Optional[int] = None):
+    """  收藏内容或取消收藏
+    """
+    user: User = get_current_user()
+    if not content_id:
+        return CommonError.get_error(error_code=40000)
+    model: RssContentCollectModel
+    try:
+        model = RssContentCollectModel.query.filter(
+            RssContentCollectModel.user_id == user.id,
+            RssContentCollectModel.content_id == content_id,
+        ).one()
+        isDelete: bool = bool(model.is_delete)
+        model.is_delete = int(not isDelete)
+    except NoResultFound:
+        model = RssContentCollectModel(content_id, user.id)
+    session.flush()
+    toast: str = "取消成功" if model.is_delete else "收藏成功"
+    result: Dict[str, Any] = {
+        "contentId": content_id,
+        "userId": user.id,
+        "isDeleted": model.is_delete,
+    }
+    model.save(commit=True)
+    return response_succ(body=result, toast=toast)

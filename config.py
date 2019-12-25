@@ -4,10 +4,10 @@ import logging
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
 SQLALCHEMY_DATABASE_URI = os.environ.get(
-    "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@192.168.1.160:3306/sky_main"
+    "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main"
 )
 
-REDIS_URI = os.environ.get('REDIS_URI', 'redis://192.168.1.160:6379/')
+REDIS_URI = os.environ.get('REDIS_URI', 'redis://localhost:6379/')
 class Config:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
@@ -35,10 +35,12 @@ class Config:
 
     """ Logging 设置 """
     LOGGING_FORMATTER = (
-        "%(asctime)-15s %(levelname)s %(filename)s %(lineno)d %(process)d %(message)s"
-    )
+        "%(levelname)s - %(asctime)s - process: %(process)d - %(filename)s - %(name)s - %(lineno)d - %(module)s - %(message)s"
+    ) # 每条日志输出格式
     LOGGING_DATE_FORMATTER = "%a %d %b %Y %H:%M:%S"
     LOGGING_DIR = os.path.join(root_dir, "logs")
+    LOG_LEVEL = "DEBUG"  # 日志输出等级
+    LOG_ENABLE = True  # 是否开启日志
 
     """Celery 配置"""
     from datetime import timedelta

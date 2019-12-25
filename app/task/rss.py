@@ -1,5 +1,6 @@
 import re
 import time
+from sqlalchemy import exists, and_
 from typing import Optional, Dict, Any, List, Iterable, Callable
 import feedparser
 from app.utils import get_unix_time_tuple, filter_all_img_src
@@ -32,9 +33,7 @@ def parser_feed_root(feed_url: str) -> Dict[str, Any]:
         # 如果没有版本信息，无法判断是不是个xml，以及使用哪个版本的解析
         return payload
     version: str = feeds.version
-    rss_title: str = feeds.feed.title if hasattr(
-        feeds.feed, "title"
-    ) else ""  # rss的标题
+    rss_title: str = feeds.feed.title if hasattr(feeds.feed, "title") else ""  # rss的标题
     rss_link: str = feeds.feed.link if hasattr(feeds.feed, "link") else None  # 链接
     if not rss_link:
         return payload
@@ -75,7 +74,9 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
         "atom10": parse_atom,
         "rss10": parse_rss10,
     }
-    operator: Callable[[Dict[str, Any]], Optional[Dict[str, Any]]] = operator_map.get(payload["version"]) or parse_rss20
+    operator: Callable[[Dict[str, Any]], Optional[Dict[str, Any]]] = operator_map.get(
+        payload["version"]
+    ) or parse_rss20
     if not operator:
         return False
     version = payload["version"] if hasattr(payload, "version") else ""
@@ -83,28 +84,41 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
     subtitle = payload["subtitle"]
     items: Iterable[Dict[str, Any]] = payload["items"]
     rss: RssModel = RssModel.query.filter(RssModel.rss_link == feed_url).one()
-    rss.rss_title = title
-    rss.version = payload.get('version')
-    session.commit()
-    for item in items:
-        try:
+    if not rss.rss_title:
+        rss.rss_title = title
+        rss.version = payload.get("version")
+        session.commit()
+
+    try:
+        append: List[RssContentModel] = []
+        for item in items:
             parsed = operator(item)
-            if not parsed: continue
+            if not parsed:
+                continue
             descript: str = ""
             item_title: str = parsed.get("title") or ""
             link = parsed.get("link") or ""
             cover_img = parsed.get("cover_img") or ""
             published = parsed.get("published") or ""
-            descript = parsed.get("descript") or ""
             timeLocal = get_unix_time_tuple()
-            model: RssContentModel = RssContentModel(
-                link, rss.rss_id, item_title, descript, cover_img, published, timeLocal
-            )
-            model.save(True)
-        except Exception as error:
-            logger.warning(str(error))
-            continue
-
+            has: bool = session.query(
+                exists().where(
+                    and_(
+                        RssContentModel.content_title == item_title,
+                        RssContentModel.content_link == link,
+                    )
+                )
+            ).scalar()
+            if not has:
+                model: RssContentModel = RssContentModel(
+                    link, rss.rss_id, item_title, cover_img, published, timeLocal
+                )
+                append.append(model)
+        logger.info(append)
+        session.add_all(append)
+        session.commit()
+    except Exception as e:
+        logger.error(e)
     return True
 
 
@@ -127,7 +141,7 @@ def parse_rss20(item: Dict[str, Any]) -> Optional[Dict[Any, Any]]:
             published = item["published"]
         if hasattr(item, "published_parsed"):
             published = item["published_parsed"]
-        
+
         result.setdefault("title", title)
         result.setdefault("descript", summary)
         result.setdefault("link", link)
