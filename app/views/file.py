@@ -43,7 +43,7 @@ class FileStoreView(MethodView):
                 # uuid
                 identifier = str(uuid4()).replace("-", "")
                 model: FileModel = FileModel(
-                    filename, file_type=extension, file_hash=identifier
+                    filename, file_type=file.content_type, file_hash=identifier
                 )
                 name: str = fileStorage.save(
                     file,
