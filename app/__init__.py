@@ -3,7 +3,7 @@ from os import path, listdir
 from flask import Flask, Blueprint
 
 from config import configInfo, Config, root_dir
-from app.utils import db, configure_uploads, fileStorage
+from app.utils import db
 from app.utils import migrate_manager, get_logger
 from app.utils import celery_app
 
@@ -53,7 +53,6 @@ def create_app(env: str) -> Flask:
     # 插件注册
     db.init_app(app)
     migrate_manager.init_app(app, db)
-    configure_uploads(app, fileStorage)
     regist_blueprint(app, 'app')
     logger.info(config_obj.UPLOAD_FOLDER)
     # 更新 celery 配置

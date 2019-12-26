@@ -19,10 +19,10 @@ class Config:
     SQLALCHEMY_ECHO = False
 
     """配置上传文件相关"""
-
+    UPLOAD_URL = os.environ.get("UPLOAD_URL")  or "http://192.168.1.160:5099/"
     UPLOAD_FOLDER = os.path.abspath(os.path.join(os.getcwd(), "disk"))
     # UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
-    ALLOWED_EXTENSIONS = ("txt", "png", "jpg", "jpeg")
+    ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
     """Flask Uploads 配置"""
     UPLOADED_PHOTOS_DEST = UPLOAD_FOLDER

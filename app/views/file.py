@@ -2,10 +2,12 @@
 
 from typing import Optional, Any, Dict, List, Union
 from uuid import uuid4
-from flask import request, Blueprint
+import os
+from werkzeug import secure_filename
+import requests
+from flask import request, Blueprint, current_app, send_from_directory, url_for
 from flask.views import MethodView
 from werkzeug.datastructures import FileStorage
-from app.utils import fileStorage
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
@@ -25,6 +27,7 @@ app.fetch_route(api, "/storage")
 @login_require
 @pages_info_requires
 def file_list():
+    """ 获得文件的列表 """
     user: User = get_current_user()
     pageInfo: PageInfo = get_page_info()
     files = (
@@ -43,15 +46,14 @@ def file_list():
         .limit(pageInfo.limit)
         .all()
     )
-    logger.info(files)
     payload: List[Dict[str, Any]] = [
         {
             "file_id": file.file_id,
             "create_time": file.file_create_time,
             "file_state": file.file_user_state,
             "file_type": file.file_type,
-            "file_url": fileStorage.url(file.file_hash),
             "file_name": file.file_name,
+            "file_url": url_for("storage.file", file_idf=file.file_hash),
         }
         for file in files
         if files
@@ -62,16 +64,29 @@ def file_list():
 class FileStoreView(MethodView):
     decorators = [login_require]
 
+    def upload_folder(self):
+        UPLOAD_FOLDER = current_app.config.get("UPLOAD_FOLDER")
+        return UPLOAD_FOLDER
+
     def get(self, file_idf: Optional[Union[int, str]]):
+        logger.info(type(file_idf))
+        file: Optional[FileModel] = None
         if not file_idf:
             return CommonError.get_error(40000)
         if file_idf is int:
             # id
-            pass
-        else:
+            file = FileModel.query.get(file_idf)
+        elif isinstance(file_idf, str):
             # hash
-            pass
-        return response_succ()
+            logger.info(file_idf)
+            file = FileModel.query.filter(FileModel.file_hash == file_idf).one()
+        if not file:
+            return CommonError.error_toast(msg="无法找到文件")
+        filehash = file.file_hash
+        filename = file.file_name
+        extension = filename.split(".")[-1].lower()
+        targetfile = ".".join([filehash, extension])
+        return send_from_directory(self.upload_folder(), targetfile)
 
     def post(self):
         params = parse_params(request)
@@ -88,14 +103,11 @@ class FileStoreView(MethodView):
                 extension = filename.split(".")[-1].lower()
                 # uuid
                 identifier = str(uuid4()).replace("-", "")
+                target_file = ".".join([identifier, extension])
+                dest: str = self.upload_folder()
+                file.save(os.path.join(dest, target_file))
                 model: FileModel = FileModel(
                     filename, file_type=file.content_type, file_hash=identifier
-                )
-                name: str = fileStorage.save(
-                    file,
-                    name="{identifier}".format(
-                        identifier=identifier
-                    ),
                 )
                 payload.append(model)
                 session.add(model)
@@ -107,6 +119,7 @@ class FileStoreView(MethodView):
                 file_user.append(relationship)
                 session.add(relationship)
                 session.flush()
+                
             session.commit()
             result: List[Dict[str, Any]] = [
                 {"file_id": f.file_id, "file_hash": f.file_hash} for f in payload
@@ -129,6 +142,7 @@ class FileStoreView(MethodView):
         pass
 
 
-file_view = FileStoreView.as_view("file_api")
+file_view = FileStoreView.as_view("file")
+file_upload = FileStoreView.as_view("file_upload")
 api.add_url_rule("/file/<file_idf>", view_func=file_view, methods=["GET", "DELETE"])
-api.add_url_rule("/upload", view_func=file_view, methods=["POST"])
+api.add_url_rule("/upload", view_func=file_upload, methods=["POST"])
