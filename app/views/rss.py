@@ -30,7 +30,7 @@ app.fetch_route(api, "/rss")
 logger = get_logger(__name__)
 
 
-@api.route("/add", methods=["POST"])
+@api.route("/add/", methods=["POST"])
 @login_require
 def add_rss_source():
     """ 添加一个订阅源
@@ -74,7 +74,7 @@ def add_rss_source():
     return response_succ(body=payload)
 
 
-@api.route("/remove", methods=["POST"])
+@api.route("/remove/", methods=["POST"])
 @login_require
 def remove():
     """  尝试移除一个订阅源
@@ -97,7 +97,7 @@ def remove():
     return response_succ()
 
 
-@api.route("/limit", methods=["GET"])
+@api.route("/limit/", methods=["GET"])
 @login_require
 @pages_info_requires
 def rss_list():
@@ -128,7 +128,7 @@ def rss_list():
     return response_succ(body=payload)
 
 
-@api.route("/content/limit", methods=["GET"])
+@api.route("/content/limit/", methods=["GET"])
 @login_require
 @pages_info_requires
 def content_limit():
@@ -178,7 +178,7 @@ def content_limit():
     return response_succ(body=payload)
 
 
-@api.route("/content/reading/<int:content_id>", methods=["POST"])
+@api.route("/content/reading/<int:content_id>/", methods=["POST"])
 @login_require
 def rss_content(content_id: Optional[int] = None):
     """  添加阅读记录
@@ -191,7 +191,7 @@ def rss_content(content_id: Optional[int] = None):
     return response_succ()
 
 
-@api.route("/content/toggleCollect/<int:content_id>", methods=["POST"])
+@api.route("/content/toggleCollect/<int:content_id>/", methods=["POST"])
 @login_require
 def rss_collect(content_id: Optional[int] = None):
     """  收藏内容或取消收藏

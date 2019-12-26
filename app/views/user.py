@@ -13,7 +13,7 @@ api = Blueprint("user", __name__)
 app.fetch_route(api, "/user")
 
 
-@api.route("/register", methods=["POST"])
+@api.route("/register/", methods=["POST"])
 def register():
     params = parse_params(request)
     email: str = params.get("email")
@@ -32,7 +32,7 @@ def register():
         return CommonError.get_error(error_code=9999)
 
 
-@api.route("/login", methods=["POST"])
+@api.route("/login/", methods=["POST"])
 def login():
     params = parse_params(request)
     email: str = params.get("email")
@@ -59,7 +59,7 @@ def login():
         return UserError.get_error(40203)
 
 
-@api.route("/logout", methods=["POST"])
+@api.route("/logout/", methods=["POST"])
 def logout():
     """  登出
     设置redis时间为过期
@@ -67,7 +67,7 @@ def logout():
     pass
 
 
-@api.route("/info", methods=["GET"])
+@api.route("/info/", methods=["GET"])
 @login_require
 def user_info():
     """  获得用户基本信息 
@@ -79,7 +79,7 @@ def user_info():
     return response_succ(body=payload)
 
 
-@api.route("/modify_info", methods=["POST"])
+@api.route("/modify_info/", methods=["POST"])
 def modify_user_info():
     params = parse_params(request)
     user: User = get_current_user()
