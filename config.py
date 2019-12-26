@@ -3,11 +3,18 @@ import logging
 
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
+# __HOST__ = "192.168.1.160"
+
+__HOST__ = "localhost"
+
 SQLALCHEMY_DATABASE_URI = os.environ.get(
-    "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://root:12345678@192.168.1.160:3306/sky_main"
+    "SQLALCHEMY_DATABASE_URI",
+    "mysql+pymysql://root:12345678@{host}:3306/sky_main".format(host=__HOST__),
 )
 
-REDIS_URI = os.environ.get('REDIS_URI', 'redis://192.168.1.160:6379/')
+REDIS_URI = os.environ.get("REDIS_URI", "redis://{host}:6379/".format(host=__HOST__))
+
+
 class Config:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
@@ -19,10 +26,9 @@ class Config:
     SQLALCHEMY_ECHO = False
 
     """配置上传文件相关"""
-    UPLOAD_URL = os.environ.get("UPLOAD_URL")  or "http://192.168.1.160:5099/"
     UPLOAD_FOLDER = os.path.abspath(os.path.join(os.getcwd(), "disk"))
     # UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
-    ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+    ALLOWED_EXTENSIONS = set(["txt", "pdf", "png", "jpg", "jpeg", "gif"])
 
     """Flask Uploads 配置"""
     UPLOADED_PHOTOS_DEST = UPLOAD_FOLDER
@@ -34,9 +40,7 @@ class Config:
     SECURITY_PASSWORD_HASH = "sha512_crypt"
 
     """ Logging 设置 """
-    LOGGING_FORMATTER = (
-        "%(levelname)s - %(asctime)s - process: %(process)d - %(filename)s - %(name)s - %(lineno)d - %(module)s - %(message)s"
-    ) # 每条日志输出格式
+    LOGGING_FORMATTER = "%(levelname)s - %(asctime)s - process: %(process)d - %(filename)s - %(name)s - %(lineno)d - %(module)s - %(message)s"  # 每条日志输出格式
     LOGGING_DATE_FORMATTER = "%a %d %b %Y %H:%M:%S"
     LOGGING_DIR = os.path.join(root_dir, "logs")
     LOG_LEVEL = "DEBUG"  # 日志输出等级
@@ -44,27 +48,28 @@ class Config:
 
     """Celery 配置"""
     from datetime import timedelta
+
     CELERY_RESULT_BACKEND = REDIS_URI
 
-    BROKER_URL = REDIS_URI + '0'
+    BROKER_URL = REDIS_URI + "0"
 
-    CELERY_TIMEZONE='Asia/Shanghai'
+    CELERY_TIMEZONE = "Asia/Shanghai"
 
-    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_TASK_SERIALIZER = "json"
 
-    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = "json"
 
-    CELERY_ACCEPT_CONTENT=['json']
+    CELERY_ACCEPT_CONTENT = ["json"]
 
     # 定义定时任务
     CELERYBEAT_SCHEDULE = {
-        'app.task.beat.parse_rsses': {
-            'task': 'app.task.beat.parse_rsses',
-            'schedule': timedelta(seconds=60*60*4),
-            'args': ()
+        "app.task.beat.parse_rsses": {
+            "task": "app.task.beat.parse_rsses",
+            "schedule": timedelta(seconds=60*60*4),
+            "args": (),
         }
     }
-    
+
     @classmethod
     def init_app(app, *args, **kwargs):
         pass
