@@ -10,7 +10,7 @@ from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
-from app.utils import login_require
+from app.utils import login_require, pages_info_requires, PageInfo, get_page_info
 from app.utils import is_link, get_logger
 from app.model import User, FileUserModel, FileModel
 import app
@@ -21,11 +21,57 @@ api = Blueprint("storage", __name__)
 app.fetch_route(api, "/storage")
 
 
+@api.route("/files", methods=["GET"])
+@login_require
+@pages_info_requires
+def file_list():
+    user: User = get_current_user()
+    pageInfo: PageInfo = get_page_info()
+    files = (
+        session.query(
+            FileModel.file_id,
+            FileModel.file_hash,
+            FileModel.file_name,
+            FileModel.file_create_time,
+            FileModel.file_type,
+            FileUserModel.file_user_state,
+            FileUserModel.add_time,
+        )
+        .join(FileUserModel, FileUserModel.file_id == FileModel.file_id)
+        .filter(FileUserModel.file_user_id == user.id, FileModel.file_is_delete == 0)
+        .offset(pageInfo.offset)
+        .limit(pageInfo.limit)
+        .all()
+    )
+    logger.info(files)
+    payload: List[Dict[str, Any]] = [
+        {
+            "file_id": file.file_id,
+            "create_time": file.file_create_time,
+            "file_state": file.file_user_state,
+            "file_type": file.file_type,
+            "file_url": fileStorage.url(file.file_hash),
+            "file_name": file.file_name,
+        }
+        for file in files
+        if files
+    ]
+    return response_succ(body=payload)
+
+
 class FileStoreView(MethodView):
     decorators = [login_require]
 
-    def get(self, file_id: Optional[Union[int, str]]):
-        pass
+    def get(self, file_idf: Optional[Union[int, str]]):
+        if not file_idf:
+            return CommonError.get_error(40000)
+        if file_idf is int:
+            # id
+            pass
+        else:
+            # hash
+            pass
+        return response_succ()
 
     def post(self):
         params = parse_params(request)
@@ -47,8 +93,8 @@ class FileStoreView(MethodView):
                 )
                 name: str = fileStorage.save(
                     file,
-                    name="{identifier}.{extension}".format(
-                        identifier=identifier, extension=extension
+                    name="{identifier}".format(
+                        identifier=identifier
                     ),
                 )
                 payload.append(model)
@@ -71,12 +117,18 @@ class FileStoreView(MethodView):
             return CommonError.get_error(9999)
 
     def delete(self, file_id: Optional[Union[int, str]]):
-        pass
+        user: User = get_current_user()
+        relationship = FileUserModel.query.filter(
+            FileUserModel.user_id == user.id, FileUserModel.file_id == file_id
+        ).one()
+        relationship.file_user_state = 4
+        relationship.save(commit=True)
+        return response_succ(toast="删除成功")
 
     def put(self, file_id: Optional[Union[int, str]]):
         pass
 
 
 file_view = FileStoreView.as_view("file_api")
-api.add_url_rule("/file/<file_id>", view_func=file_view, methods=["GET", "DELETE"])
+api.add_url_rule("/file/<file_idf>", view_func=file_view, methods=["GET", "DELETE"])
 api.add_url_rule("/upload", view_func=file_view, methods=["POST"])

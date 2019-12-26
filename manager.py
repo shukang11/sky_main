@@ -25,6 +25,11 @@ def insertdata():
 
 
 @manager.command
+def dropdb():
+    from app import drop_tables
+    drop_tables(main_app)
+
+@manager.command
 def createdb():
     from app import create_tables
     create_tables(main_app)

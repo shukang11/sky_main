@@ -7,7 +7,7 @@ from app.utils import db, configure_uploads, fileStorage
 from app.utils import migrate_manager, get_logger
 from app.utils import celery_app
 
-__all__ = ['create_app', 'fetch_route', 'create_tables']
+__all__ = ['create_app', 'fetch_route', 'create_tables', 'drop_tables']
 
 logger = get_logger(__name__)
 
@@ -32,6 +32,10 @@ def regist_blueprint(app: Flask, src_dir: str):
     for blueprint in route_list:
         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
+def drop_tables(app: Flask):
+    from app.model import __all__
+    with app.app_context():
+        db.drop_all()
 
 def create_tables(app: Flask):
     from app.model import __all__
