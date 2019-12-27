@@ -46,6 +46,7 @@ def create_tables(app: Flask):
 def create_app(env: str) -> Flask:
     assert(type(env) is str)
     app = Flask(__name__)
+    app.url_map.strict_slashes = False
     config_obj: Any = configInfo.get(env)
     logger.debug(config_obj.SQLALCHEMY_DATABASE_URI)
     app.config.from_object(config_obj)

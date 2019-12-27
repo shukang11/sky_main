@@ -26,5 +26,5 @@ def parse_rsses():
         payload = parser_feed_root(link)
         one_res = save_feed_items(link, payload)
         result = result and one_res
-        logger.info("{result}--{link}".format(result=result, link=link))
+        logger.info("{result}--{link}".format(result=one_res, link=link))
     return result

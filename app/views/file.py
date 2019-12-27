@@ -45,7 +45,7 @@ def file_list():
             FileUserModel.add_time,
         )
         .join(FileUserModel, FileUserModel.file_id == FileModel.file_id)
-        .filter(FileUserModel.file_user_id == user.id, FileModel.file_is_delete == 0)
+        .filter(FileUserModel.user_id == user.id, FileModel.file_is_delete == 0)
         .offset(pageInfo.offset)
         .limit(pageInfo.limit)
         .all()
@@ -110,7 +110,7 @@ def upload():
 
 
 @api.route("/file/<file_idf>/", methods=["GET"])
-@login_require
+# @login_require
 def getfile(file_idf: Union[int, str]):
     logger.info(file_idf)
     file: Optional[FileModel] = None
