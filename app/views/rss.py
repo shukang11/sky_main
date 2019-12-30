@@ -21,6 +21,7 @@ from app.model import (
     RssReadRecordModel,
     RssUserModel,
     RssContentCollectModel,
+    RssContentRateModel,
 )
 import app
 
@@ -140,7 +141,11 @@ def content_limit():
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
     rss_content: List[Tuple[RssContentModel, Optional[str], Optional[int]]] = (
-        session.query(RssContentModel, RssContentCollectModel.is_delete.label('isDeleted'), RssModel.rss_title.label('from_site'))
+        session.query(
+            RssContentModel,
+            RssContentCollectModel.is_delete.label("isDeleted"),
+            RssModel.rss_title.label("from_site"),
+        )
         .join(
             RssUserModel,
             and_(
@@ -163,7 +168,7 @@ def content_limit():
     payload: List[Dict[str, Any]] = []
     for item in rss_content:
         r, isDeleted, fromsite = item
-        if not isDeleted: 
+        if not isDeleted:
             isDeleted = True
         item = {
             "content_id": r.content_id,
@@ -218,3 +223,28 @@ def rss_collect(content_id: Optional[int] = None):
     }
     model.save(commit=True)
     return response_succ(body=result, toast=toast)
+
+
+@api.route("/content/rate/<int:content_id>/<int:rate_value>", methods=["POST"])
+@login_require
+def rss_rate(content_id: int, rate_value: int):
+    """ 对订阅内容评分 """
+    user: User = get_current_user()
+    params: Dict[str, str] = parse_params(request)
+    if not user:
+        return CommonError.get_error(error_code=40000)
+    model: RssContentRateModel
+    try:
+        model = RssContentRateModel.query.filter(
+            RssContentRateModel.content_id, RssContentRateModel.user_id == user.id
+        ).one()
+    except NoResultFound:
+        model = RssContentRateModel(content_id, user.id, None, params.get("content"))
+    except MultipleResultsFound:
+        return CommonError.get_error(error_code=40000)
+    else:
+        model.save(commit=True)
+    payload: Dict[str, int] = {}
+    payload["content_id"] = content_id
+    payload["rate_value"] = rate_value
+    return response_succ(payload)
