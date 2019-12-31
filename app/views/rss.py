@@ -145,6 +145,7 @@ def content_limit():
             RssContentModel,
             RssContentCollectModel.is_delete.label("isDeleted"),
             RssModel.rss_title.label("from_site"),
+            RssContentRateModel.rate.label("rate_value"),
         )
         .join(
             RssUserModel,
@@ -161,13 +162,20 @@ def content_limit():
                 RssContentModel.content_id == RssContentCollectModel.content_id,
             ),
         )
+        .outerjoin(
+            RssContentRateModel,
+            and_(
+                RssUserModel.user_id == RssContentRateModel.user_id,
+                RssContentModel.content_id == RssContentCollectModel.content_id,
+            ),
+        )
         .offset(pageinfo.offset)
         .limit(pageinfo.limit)
         .all()
     )
     payload: List[Dict[str, Any]] = []
     for item in rss_content:
-        r, isDeleted, fromsite = item
+        r, isDeleted, fromsite, rate_value = item
         if not isDeleted:
             isDeleted = True
         item = {
@@ -178,6 +186,8 @@ def content_limit():
             "add_time": get_date_from_time_tuple(r.add_time),
             "isCollected": not isDeleted,
             "from_site": fromsite,
+            "rate_value": rate_value,
+            "is_no_rate": not rate_value,
         }
         payload.append(item)
     return response_succ(body=payload)
