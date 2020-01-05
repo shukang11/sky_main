@@ -140,54 +140,38 @@ def content_limit():
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    rss_content: List[Tuple[RssContentModel, Optional[str], Optional[int]]] = (
-        session.query(
-            RssContentModel,
-            RssContentCollectModel.is_delete.label("isDeleted"),
-            RssModel.rss_title.label("from_site"),
-            RssContentRateModel.rate.label("rate_value"),
-        )
-        .join(
-            RssUserModel,
-            and_(
-                RssContentModel.rss_id == RssUserModel.rss_id,
-                RssUserModel.user_id == user.id,
-            ),
-        )
-        .join(RssModel, and_(RssContentModel.rss_id == RssModel.rss_id))
-        .outerjoin(
-            RssContentCollectModel,
-            and_(
-                RssUserModel.user_id == RssContentCollectModel.user_id,
-                RssContentModel.content_id == RssContentCollectModel.content_id,
-            ),
-        )
-        .outerjoin(
-            RssContentRateModel,
-            and_(
-                RssUserModel.user_id == RssContentRateModel.user_id,
-                RssContentModel.content_id == RssContentCollectModel.content_id,
-            ),
-        )
-        .offset(pageinfo.offset)
-        .limit(pageinfo.limit)
-        .all()
-    )
+    sql: str = (
+        "SELECT bao_rss_content.content_id AS cid, " 
+        "bao_rss_content.rss_id AS rssId, " 
+        "bao_rss_content.content_link AS link, " 
+        "bao_rss_content.content_title AS title, " 
+        "bao_rss_content.content_image_cover AS image, " 
+        "bao_rss_content.published_time AS publishDate, " 
+        "bao_rss_content.add_time AS addDate, " 
+        "bao_rss.rss_title AS fromsite, "
+        "bao_rss_content_collect.is_collected AS isCollected "
+        "FROM bao_rss_content "
+        "LEFT JOIN bao_rss_user ON bao_rss_content.rss_id = bao_rss_user.rss_id AND bao_rss_user.user_id = {uid} " 
+        "LEFT JOIN bao_rss ON bao_rss_content.rss_id = bao_rss.rss_id "
+        "INNER JOIN bao_rss_content_collect ON bao_rss_content_collect.content_id = bao_rss_content.content_id "
+        "ORDER BY bao_rss_content.published_time DESC "
+        "LIMIT {offset}, {limit}; "
+    ).format(uid=user.id, offset=pageinfo.offset, limit=pageinfo.limit)
+    logger.info(sql)
+    rss_content: Any = session.execute(sql)
+    logger.info(rss_content)
     payload: List[Dict[str, Any]] = []
     for item in rss_content:
-        r, isDeleted, fromsite, rate_value = item
-        if not isDeleted:
-            isDeleted = True
         item = {
-            "content_id": r.content_id,
-            "title": r.content_title or "",
-            "link": r.content_link,
-            "hover_image": r.content_image_cover or "",
-            "add_time": get_date_from_time_tuple(r.add_time),
-            "isCollected": not isDeleted,
-            "from_site": fromsite,
-            "rate_value": rate_value,
-            "is_no_rate": not rate_value,
+            "content_id": item.cid,
+            "title": item.title or "",
+            "link": item.link,
+            "hover_image": item.image or "",
+            "add_time": get_date_from_time_tuple(item.addDate),
+            "from_site": item.fromsite,
+            "isCollected": item.isCollected,
+            # "rate_value": rate_value,
+            # "is_no_rate": not rate_value,
         }
         payload.append(item)
     return response_succ(body=payload)
@@ -195,7 +179,7 @@ def content_limit():
 
 @api.route("/content/reading/<int:content_id>/", methods=["POST"])
 @login_require
-def rss_content(content_id: Optional[int] = None):
+def rss_content_read(content_id: Optional[int] = None):
     """  添加阅读记录
     """
     user: User = get_current_user()
@@ -220,16 +204,17 @@ def rss_collect(content_id: Optional[int] = None):
             RssContentCollectModel.user_id == user.id,
             RssContentCollectModel.content_id == content_id,
         ).one()
-        isDelete: bool = bool(model.is_delete)
-        model.is_delete = int(not isDelete)
+        isCollect: bool = bool(model.is_collected)
+        model.is_collected = int(not isCollect)
     except NoResultFound:
         model = RssContentCollectModel(content_id, user.id)
+        model.is_collected = 1
     session.flush()
-    toast: str = "取消成功" if model.is_delete else "收藏成功"
+    toast: str = "收藏成功" if model.is_collected else "取消成功"
     result: Dict[str, Any] = {
         "contentId": content_id,
         "userId": user.id,
-        "isDeleted": model.is_delete,
+        "isCollected": model.is_collected,
     }
     model.save(commit=True)
     return response_succ(body=result, toast=toast)

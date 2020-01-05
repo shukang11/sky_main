@@ -2,7 +2,7 @@
 
 from typing import Optional, TypeVar, Dict
 from sqlalchemy import Column, ForeignKey, String, Sequence
-from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT, Table
+from sqlalchemy import FLOAT, TEXT, INTEGER, DECIMAL, SMALLINT, Table, Boolean
 from app.utils import db, get_unix_time_tuple
 from .base import BaseModel
 
@@ -120,8 +120,8 @@ class RssContentCollectModel(db.Model, BaseModel):
     )
     user_id = Column(INTEGER, nullable=True)
     content_id = Column(INTEGER, nullable=True)
-    collect_time = Column(String(20), nullable=True)
-    is_delete = Column(SMALLINT, nullable=True, default=0, comment="1 删除 0 未删除")
+    collect_time = Column(String(11), nullable=True)
+    is_collected = Column(Boolean, nullable=True, default=False, comment="1 收藏 0 删除 未收藏")
 
     def __init__(self, content_id: int, user_id: int, time: Optional[str] = None):
         self.content_id = content_id

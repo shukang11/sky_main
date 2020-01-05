@@ -139,3 +139,4 @@ migrations/
 logs/
 disk/
 .idea/
+data-test.sqlite

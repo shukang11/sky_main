@@ -3,7 +3,7 @@
 from typing import Optional, Any, Dict, List, Union
 from uuid import uuid4
 import os
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 from flask import request, Blueprint, current_app, send_from_directory, url_for
 from flask.views import MethodView
 from werkzeug.datastructures import FileStorage
