@@ -61,4 +61,4 @@ def dashboard_info():
     return response_succ(body=payload)
 
 
-api.add_url_rule("/info", view_func=dashboard_info, methods=["GET", "POST"])
+api.add_url_rule("/info/", view_func=dashboard_info, methods=["GET", "POST"])

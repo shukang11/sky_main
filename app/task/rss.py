@@ -114,7 +114,6 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
                     link, rss.rss_id, item_title, cover_img, published, timeLocal
                 )
                 append.append(model)
-        logger.info(append)
         session.add_all(append)
         session.commit()
     except Exception as e:

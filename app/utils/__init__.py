@@ -2,7 +2,7 @@
 
 from .errors import CommonError, UserError
 
-from .ext import redisClient, session, fileStorage
+from .ext import redisClient, session
 from .ext import migrate_manager
 from .ext import db
 from .ext import celery_app
@@ -25,7 +25,5 @@ from .strings import is_link
 
 from .verfy import login_option, login_require
 from .verfy import pages_info_requires
-
-from flask_uploads import configure_uploads
 
 from sqlalchemy import text

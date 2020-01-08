@@ -1,6 +1,6 @@
-from typing import Optional, AnyStr, Dict
+from typing import Optional, Dict, Any, List
 from flask import request, Blueprint
-from app.utils import UserError, CommonError
+from app.utils import UserError, CommonError, NoResultFound
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
@@ -12,7 +12,7 @@ api = Blueprint("todo", __name__)
 app.fetch_route(api, "/todo")
 
 
-@api.route("/add", methods=["POST"])
+@api.route("/add/", methods=["POST"])
 @login_require
 def add_todo():
     """ add todo by parameters
@@ -45,7 +45,7 @@ def add_todo():
         return CommonError.get_error(error_code=9999)
 
 
-def set_todo_state(todo_id: int, state: int) -> Optional[Dict[AnyStr, any]]:
+def set_todo_state(todo_id: int, state: int) -> Optional[Dict[str, Any]]:
     """ change a todo item state
 
     try to modify a todo_state, option (1, 2, 3)
@@ -87,7 +87,7 @@ def set_todo_state(todo_id: int, state: int) -> Optional[Dict[AnyStr, any]]:
     return result
 
 
-@api.route("/finish", methods=["POST"])
+@api.route("/finish/", methods=["POST"])
 @login_require
 def finish_todo():
     params = parse_params(request)
@@ -98,7 +98,7 @@ def finish_todo():
     return response_succ(body=result)
 
 
-@api.route("/remove", methods=["POST"])
+@api.route("/remove/", methods=["POST"])
 @login_require
 def remove_todo():
     params = parse_params(request)
@@ -109,7 +109,7 @@ def remove_todo():
     return response_succ(body=result)
 
 
-@api.route("/filter/<string:filter>", methods=["POST"])
+@api.route("/filter/<string:filter>/", methods=["POST"])
 @login_require
 def filter_todo(filter: str = None):
     params = parse_params(request)
@@ -123,21 +123,19 @@ def filter_todo(filter: str = None):
         todos = todos.filter(TodoModel.todo_state == 2).all()
     if option_filter == "all":
         todos = todos.filter(TodoModel.todo_state != 3).all()
-    result = list()
-    if not todos or len(todos) == 0:
-        response_succ(body=())
-    for todo in todos:
-        result.append(
-            {
-                "todo_id": todo.todo_id,
-                "todo_title": todo.todo_title,
-                "todo_state": todo.todo_state,
-            }
-        )
+    result: List[Dict[str, Any]] = [
+        {
+            "todo_id": todo.todo_id,
+            "todo_title": todo.todo_title,
+            "todo_state": todo.todo_state,
+        }
+        for todo in todos
+        if todos
+    ]
     return response_succ(body=result)
 
 
-@api.route("/undo", methods=["POST"])
+@api.route("/undo/", methods=["POST"])
 @login_require
 def undo_todo():
     params = parse_params(request)
