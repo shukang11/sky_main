@@ -139,40 +139,56 @@ def content_limit():
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    sql: str = (
-        "SELECT bao_rss_content.content_id AS cid, " 
-        "bao_rss_content.rss_id AS rssId, " 
-        "bao_rss_content.content_link AS link, " 
-        "bao_rss_content.content_title AS title, " 
-        "bao_rss_content.content_image_cover AS image, " 
-        "bao_rss_content.published_time AS publishDate, " 
-        "bao_rss_content.add_time AS addDate, " 
-        "bao_rss.rss_title AS fromsite, "
-        "bao_rss_content_collect.is_collected AS isCollected "
-        "FROM bao_rss_content "
-        "LEFT JOIN bao_rss_user ON bao_rss_user.rss_id = bao_rss_content.rss_id AND bao_rss_user.user_id = {uid} " 
-        "LEFT JOIN bao_rss ON bao_rss_content.rss_id = bao_rss.rss_id "
-        "LEFT OUTER JOIN bao_rss_content_collect ON bao_rss_content_collect.content_id = bao_rss_content.content_id "
-        "ORDER BY bao_rss_content.published_time DESC "
-        "LIMIT {offset}, {limit}; "
-    ).format(uid=user.id, offset=pageinfo.offset, limit=pageinfo.limit)
-    logger.info(sql)
-    rss_content: Any = session.execute(sql)
-    payload: List[Dict[str, Any]] = []
-    for item in rss_content:
-        item = {
-            "content_id": item.cid,
-            "title": item.title or "",
-            "link": item.link,
-            "hover_image": item.image or "",
-            "add_time": get_date_from_time_tuple(item.addDate),
-            "from_site": item.fromsite,
-            "isCollected": item.isCollected,
-            # "rate_value": rate_value,
-            # "is_no_rate": not rate_value,
-        }
-        payload.append(item)
-    return response_succ(body=payload)
+    try:
+        rss_content: List[Tuple[str, ...]] = (
+            session.query(
+                RssContentModel.content_id.label("cid"),
+                RssContentModel.rss_id.label("rssId"),
+                RssContentModel.content_link.label("link"),
+                RssContentModel.content_title.label("title"),
+                RssContentModel.content_image_cover.label("image"),
+                RssContentModel.published_time.label("publishDate"),
+                RssContentModel.add_time.label("addDate"),
+                RssModel.rss_title.label("fromsite"),
+                RssContentCollectModel.is_collected.label("isCollected"),
+            )
+            .join(
+                RssUserModel,
+                and_(
+                    RssUserModel.rss_id == RssContentModel.rss_id,
+                    RssUserModel.user_id == user.id,
+                ),
+                isouter=False,
+            )
+            .join(RssModel, RssContentModel.rss_id == RssModel.rss_id, isouter=False)
+            .outerjoin(
+                RssContentCollectModel,
+                RssContentCollectModel.content_id == RssContentModel.content_id,
+            )
+            .order_by(RssContentModel.published_time.desc())
+            .offset(pageinfo.offset)
+            .limit(pageinfo.limit)
+            .all()
+        )
+    except Exception as e:
+        logger.error(e)
+        return CommonError.get_error(error_code=9999)
+    else:
+        payload: List[Dict[str, Any]] = []
+        for item in rss_content:
+            item = {
+                "content_id": item.cid,
+                "title": item.title or "",
+                "link": item.link,
+                "hover_image": item.image or "",
+                "add_time": get_date_from_time_tuple(item.addDate),
+                "from_site": item.fromsite,
+                "isCollected": item.isCollected,
+                # "rate_value": rate_value,
+                # "is_no_rate": not rate_value,
+            }
+            payload.append(item)
+        return response_succ(body=payload)
 
 
 @api.route("/content/reading/<int:content_id>/", methods=["POST"])
