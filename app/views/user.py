@@ -39,7 +39,7 @@ def login():
     password: str = params.get("password")
     exsist_user: User = session.query(User).filter_by(
         email=email, password=password
-    ).first()
+    ).one()
     if exsist_user:
         # update log time
         login_time: str = get_unix_time_tuple()

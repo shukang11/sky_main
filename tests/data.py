@@ -113,5 +113,5 @@ def insert_rss_source():
     sources: List[str] = list(set(RSS_SOURCES))
     target = "http://127.0.0.1:9000/rss/add"
     for s in sources:
-        r = requests.post(target, data={"token": "4a7a44586714d609527ea10bb4afa3a5", "source": s})
+        r = requests.post(target, data={"token": "be1182304e34eb0e80a823cac6246291", "source": s})
         print(r)

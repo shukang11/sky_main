@@ -13,7 +13,6 @@ from .rss import (
     RssReadRecordModel,
     RssUserModel,
     RssContentCollectModel,
-    RssContentRateModel,
 )
 from .file import FileModel, FileUserModel
 
@@ -26,7 +25,6 @@ __all__ = [
     "RssReadRecordModel",
     "RssUserModel",
     "RssContentCollectModel",
-    "RssContentRateModel",
     "FileModel",
     "FileUserModel",
 ]

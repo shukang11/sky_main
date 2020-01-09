@@ -3,9 +3,9 @@ import logging
 
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
-# __HOST__ = "192.168.1.160"
+__HOST__ = "192.168.1.160"
 
-__HOST__ = "localhost"
+# __HOST__ = "localhost"
 
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",

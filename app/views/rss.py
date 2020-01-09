@@ -21,7 +21,6 @@ from app.model import (
     RssReadRecordModel,
     RssUserModel,
     RssContentCollectModel,
-    RssContentRateModel,
 )
 import app
 
@@ -151,15 +150,14 @@ def content_limit():
         "bao_rss.rss_title AS fromsite, "
         "bao_rss_content_collect.is_collected AS isCollected "
         "FROM bao_rss_content "
-        "LEFT JOIN bao_rss_user ON bao_rss_content.rss_id = bao_rss_user.rss_id AND bao_rss_user.user_id = {uid} " 
+        "LEFT JOIN bao_rss_user ON bao_rss_user.rss_id = bao_rss_content.rss_id AND bao_rss_user.user_id = {uid} " 
         "LEFT JOIN bao_rss ON bao_rss_content.rss_id = bao_rss.rss_id "
-        "INNER JOIN bao_rss_content_collect ON bao_rss_content_collect.content_id = bao_rss_content.content_id "
+        "LEFT OUTER JOIN bao_rss_content_collect ON bao_rss_content_collect.content_id = bao_rss_content.content_id "
         "ORDER BY bao_rss_content.published_time DESC "
         "LIMIT {offset}, {limit}; "
     ).format(uid=user.id, offset=pageinfo.offset, limit=pageinfo.limit)
     logger.info(sql)
     rss_content: Any = session.execute(sql)
-    logger.info(rss_content)
     payload: List[Dict[str, Any]] = []
     for item in rss_content:
         item = {
@@ -218,28 +216,3 @@ def rss_collect(content_id: Optional[int] = None):
     }
     model.save(commit=True)
     return response_succ(body=result, toast=toast)
-
-
-@api.route("/content/rate/<int:content_id>/<int:rate_value>", methods=["POST"])
-@login_require
-def rss_rate(content_id: int, rate_value: int):
-    """ 对订阅内容评分 """
-    user: User = get_current_user()
-    params: Dict[str, str] = parse_params(request)
-    if not user:
-        return CommonError.get_error(error_code=40000)
-    model: RssContentRateModel
-    try:
-        model = RssContentRateModel.query.filter(
-            RssContentRateModel.content_id, RssContentRateModel.user_id == user.id
-        ).one()
-    except NoResultFound:
-        model = RssContentRateModel(content_id, user.id, None, params.get("content"))
-    except MultipleResultsFound:
-        return CommonError.get_error(error_code=40000)
-    else:
-        model.save(commit=True)
-    payload: Dict[str, int] = {}
-    payload["content_id"] = content_id
-    payload["rate_value"] = rate_value
-    return response_succ(payload)
