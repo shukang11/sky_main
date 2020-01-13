@@ -11,7 +11,7 @@ Helper functions
 """
 
 
-def parse_params(request: Any) -> Dict[AnyStr, Any]:
+def parse_params(request: Any) -> Dict[str, Any]:
     """  从一个Request实例中解析params参数
     Args:
         request: flask.request 实例对象
@@ -71,9 +71,9 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
 
     env: str = os.environ.get("FLASK_ENV", "default")
     config: Any = configInfo.get(env)
-
-    if loggers.get(name):
-        return loggers.get(name)
+    has = loggers.get(name)
+    if has:
+        return has
 
     logger = logging.getLogger(name=name)
     logger.setLevel(config.LOG_LEVEL)

@@ -15,6 +15,7 @@ from .rss import (
     RssContentCollectModel,
 )
 from .file import FileModel, FileUserModel
+from .blog import Article
 
 __all__ = [
     "User",
@@ -27,4 +28,5 @@ __all__ = [
     "RssContentCollectModel",
     "FileModel",
     "FileUserModel",
+    "Article",
 ]
