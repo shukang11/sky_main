@@ -17,7 +17,7 @@ import app
 
 
 api = Blueprint("blog", __name__)
-app.fetch_route(api, "/rss")
+app.fetch_route(api, "/blog")
 
 logger = get_logger(__name__)
 
