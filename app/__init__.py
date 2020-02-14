@@ -6,6 +6,7 @@ from config import configInfo, Config, root_dir
 from app.utils import db
 from app.utils import migrate_manager, get_logger
 from app.utils import celery_app
+from app.scripts import cmd
 
 __all__ = ['create_app', 'fetch_route', 'create_tables', 'drop_tables']
 
@@ -43,8 +44,7 @@ def create_tables(app: Flask):
         db.create_all()
 
 
-def create_app(env: str) -> Flask:
-    assert(type(env) is str)
+def create_app(env: str = "default") -> Flask:
     app = Flask(__name__)
     app.url_map.strict_slashes = False
     config_obj: Any = configInfo.get(env)
@@ -58,4 +58,6 @@ def create_app(env: str) -> Flask:
     logger.info(config_obj.UPLOAD_FOLDER)
     # 更新 celery 配置
     celery_app.conf.update(app.config)
+    # 开启脚本
+    app.cli.add_command(cmd)
     return app
