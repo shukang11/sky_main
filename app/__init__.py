@@ -6,7 +6,7 @@ from config import configInfo, Config, root_dir
 from app.utils import db
 from app.utils import migrate_manager, get_logger
 from app.utils import celery_app
-from app.scripts import cmd
+from app import scripts
 
 __all__ = ['create_app', 'fetch_route', 'create_tables', 'drop_tables']
 
@@ -59,5 +59,5 @@ def create_app(env: str = "default") -> Flask:
     # 更新 celery 配置
     celery_app.conf.update(app.config)
     # 开启脚本
-    app.cli.add_command(cmd)
+    scripts.init_app(app)
     return app
