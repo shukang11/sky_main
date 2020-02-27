@@ -4,7 +4,7 @@ from typing import Dict, AnyStr, Any, Optional, Type
 import logging
 import sys
 import os
-from config import configInfo, Config
+from app.config import configInfo, Config
 
 """
 Helper functions

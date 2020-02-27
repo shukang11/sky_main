@@ -2,30 +2,51 @@ version: '3'
 services: 
     redis:
         image: redis
-        container_name: redis-6379
+        restart: always
+        container_name: redis
         ports: 
             - "6379:6379"
 
     mysql:
-        image: mysql
+        image: mysql:5.7
+        restart: always
         container_name: mysql-3306
         volumes: 
-            - /data/mysql:/var/lib/mysql
+            - skymainsqldata:/var/lib/mysql
         environment: 
-            MYSQL_DATABASE: sky_main
-            MYSQL_ROOT_PASSWORD: 12345678 
+            - MYSQL_DATABASE=sky_main
+            - MYSQL_ROOT_PASSWORD=12345678
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=12345678 
         ports: 
             - "3306:3306"
-        command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        command: [
+            '--character-set-server=utf8mb4',
+            '--collation-server=utf8mb4_unicode_ci'
+        ]
 
     celery-worker:
         build: .
+        depends_on: 
+            - mysql
+            - redis
         container_name: celery-worker
-        command: celery -A celery_worker.app worker --loglevel=info -E
-        links: 
-            - "mysql:mysql"
+        command: 'celery -A celery_worker.app worker --loglevel=info -E'
 
     celery-beat:
         build: .
         container_name: celery-beat
-        command: celery beat -A celery_worker
+        command: 'celery beat -A celery_worker'
+        
+    sky-main:
+        build: .
+        depends_on: 
+            - mysql
+            - redis
+        ports: 
+            - "9000:5000"
+        container_name: sky-main
+        command: './start_server.sh'
+
+volumes: 
+    skymainsqldata:
