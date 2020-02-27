@@ -13,9 +13,9 @@ from .rss import (
     RssReadRecordModel,
     RssUserModel,
     RssContentCollectModel,
-    RssContentRateModel,
 )
 from .file import FileModel, FileUserModel
+from .blog import Article
 
 __all__ = [
     "User",
@@ -26,7 +26,7 @@ __all__ = [
     "RssReadRecordModel",
     "RssUserModel",
     "RssContentCollectModel",
-    "RssContentRateModel",
     "FileModel",
     "FileUserModel",
+    "Article",
 ]

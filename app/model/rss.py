@@ -128,33 +128,3 @@ class RssContentCollectModel(db.Model, BaseModel):
         self.user_id = user_id
         self.collect_time = time or get_unix_time_tuple()
         self.is_delete = 0
-
-
-class RssContentRateModel(db.Model, BaseModel):
-    """ Rss 内容用户评分, 不允许一个用户对内容的重复评价 """
-
-    __tablename__ = "bao_rss_content_rate"
-
-    rate_id = Column(
-        INTEGER,
-        Sequence(start=1, increment=1, name="rate_id_sep"),
-        primary_key=True,
-        autoincrement=True,
-    )
-    user_id = Column(INTEGER, nullable=True)
-    content_id = Column(INTEGER, nullable=True)
-    rate = Column(SMALLINT, nullable=True, comment="评分 范围是0-100之间 传入的值需要缩放到此范围之中")
-    rate_time = Column(String(11), nullable=True)
-    content = Column(String(255), nullable=True, comment="评论详情")
-
-    def __init__(
-        self,
-        content_id: int,
-        user_id: int,
-        time: Optional[str] = None,
-        content: Optional[str] = None,
-    ):
-        self.content_id = content_id
-        self.user_id = user_id
-        self.rate_time = time or get_unix_time_tuple()
-        self.content = content

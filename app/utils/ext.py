@@ -6,7 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound, \
 from sqlalchemy import Sequence
 from flask_sqlalchemy import SQLAlchemy
 from redis import ConnectionPool, Redis
-from config import REDIS_URI
+from app.config import REDIS_URI
 from flask_migrate import Migrate
 
 from celery import Celery
