@@ -19,3 +19,11 @@
 * 启动后端项目 `docker run --name sky_main-5011 -p 0.0.0.0:5011:8000 --link mysql-3306:mysql --link redis-6379:redis -d 804506054/sky_main gunicorn -w 2 -b 0.0.0.0:8000 manager:application`
 
 > 如果之后学习到了编排，会替换。目前需要学习一下docker的命令
+
+#### docker-compose
+
+> `docker-compose up -d`
+
+如果是树莓派，需要替换 `docker-compose.yml` 中的 `mysql`镜像；
+
+如果端口被占用，可以编辑 `ports` 部分
