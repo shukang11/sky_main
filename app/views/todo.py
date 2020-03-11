@@ -10,7 +10,6 @@ from app.model import User, TodoModel
 api = Blueprint("todo", __name__)
 
 
-@api.route("/add/", methods=["POST"])
 @login_require
 def add_todo():
     """ add todo by parameters
@@ -85,7 +84,6 @@ def set_todo_state(todo_id: int, state: int) -> Optional[Dict[str, Any]]:
     return result
 
 
-@api.route("/finish/", methods=["POST"])
 @login_require
 def finish_todo():
     params = parse_params(request)
@@ -96,7 +94,6 @@ def finish_todo():
     return response_succ(body=result)
 
 
-@api.route("/remove/", methods=["POST"])
 @login_require
 def remove_todo():
     params = parse_params(request)
@@ -107,7 +104,6 @@ def remove_todo():
     return response_succ(body=result)
 
 
-@api.route("/filter/<string:filter>/", methods=["POST"])
 @login_require
 def filter_todo(filter: str = None):
     params = parse_params(request)
@@ -133,7 +129,6 @@ def filter_todo(filter: str = None):
     return response_succ(body=result)
 
 
-@api.route("/undo/", methods=["POST"])
 @login_require
 def undo_todo():
     params = parse_params(request)
@@ -142,3 +137,19 @@ def undo_todo():
     if not result:
         return CommonError.get_error(40000)
     return response_succ(body=result)
+
+
+def setup_url_rule(api: Blueprint):
+    # 添加待办事项
+    api.add_url_rule("/add", view_func=add_todo, methods=["POST"])
+    # 结束待办
+    api.add_url_rule("/finish", view_func=finish_todo, methods=["POST"])
+    # 移除待办
+    api.add_url_rule("/remove", view_func=remove_todo, methods=["POST"])
+    # 筛选待办列表
+    api.add_url_rule("/filter/<string:filter>", view_func=filter_todo, methods=["POST"])
+    # 撤销结束
+    api.add_url_rule("/undo", methods=["POST"])
+
+
+setup_url_rule(api)

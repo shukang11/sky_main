@@ -9,7 +9,7 @@ from app.model import User, LoginRecordModel
 
 api = Blueprint("user", __name__)
 
-@api.route("/register/", methods=["POST"])
+
 def register():
     params = parse_params(request)
     email: str = params.get("email")
@@ -28,7 +28,6 @@ def register():
         return CommonError.get_error(error_code=9999)
 
 
-@api.route("/login/", methods=["POST"])
 def login():
     params = parse_params(request)
     email: Optional[str] = params.get("email")
@@ -57,7 +56,6 @@ def login():
         return UserError.get_error(40203)
 
 
-@api.route("/logout/", methods=["POST"])
 def logout():
     """  登出
     设置redis时间为过期
@@ -65,7 +63,6 @@ def logout():
     pass
 
 
-@api.route("/info/", methods=["GET"])
 @login_require
 def user_info():
     """  获得用户基本信息 
@@ -77,7 +74,6 @@ def user_info():
     return response_succ(body=payload)
 
 
-@api.route("/modify_info/", methods=["POST"])
 @login_require
 def modify_user_info():
     params = parse_params(request)
@@ -89,3 +85,19 @@ def modify_user_info():
     user.save()
     payload: Dict[AnyStr, any] = user.info_dict
     return response_succ(body=payload)
+
+
+def setup_url_rule(api: Blueprint):
+    # 注册
+    api.add_url_rule("/register", view_func=register, methods=["POST"])
+    # 登录
+    api.add_url_rule("/login", view_func=login, methods=["POST"])
+    # 修改信息
+    api.add_url_rule("/modify_info", view_func=modify_user_info, methods=["POST"])
+    # 获得用户信息
+    api.add_url_rule("/info", view_func=user_info, methods=["GET"])
+
+    api.add_url_rule("/logout", view_func=logout, methods=["POST"])
+
+
+setup_url_rule(api)

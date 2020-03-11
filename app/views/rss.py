@@ -28,7 +28,6 @@ api = Blueprint("rss", __name__)
 logger = get_logger(__name__)
 
 
-@api.route("/add", methods=["POST"])
 @login_require
 def add_rss_source():
     """ 添加一个订阅源
@@ -46,8 +45,7 @@ def add_rss_source():
     # 检查是否存在rss
     try:
         exists_rss: RssModel = RssModel.query.filter(RssModel.rss_link == source).one()
-        if exists_rss:
-            rss_id = exists_rss.rss_id
+        rss_id = exists_rss.rss_id
     except MultipleResultsFound as e:
         # 如果存在多个记录，要抛出
         logger.error(e)
@@ -72,7 +70,6 @@ def add_rss_source():
     return response_succ(body=payload)
 
 
-@api.route("/remove/", methods=["POST"])
 @login_require
 def remove():
     """  尝试移除一个订阅源
@@ -95,7 +92,6 @@ def remove():
     return response_succ()
 
 
-@api.route("/limit/", methods=["GET"])
 @login_require
 @pages_info_requires
 def rss_list():
@@ -126,7 +122,6 @@ def rss_list():
     return response_succ(body=payload)
 
 
-@api.route("/content/limit/", methods=["GET"])
 @login_require
 @pages_info_requires
 def content_limit():
@@ -189,7 +184,6 @@ def content_limit():
         return response_succ(body=payload)
 
 
-@api.route("/content/reading/<int:content_id>/", methods=["POST"])
 @login_require
 def rss_content_read(content_id: Optional[int] = None):
     """  添加阅读记录
@@ -202,7 +196,6 @@ def rss_content_read(content_id: Optional[int] = None):
     return response_succ()
 
 
-@api.route("/content/toggleCollect/<int:content_id>/", methods=["POST"])
 @login_require
 def rss_collect(content_id: Optional[int] = None):
     """  收藏内容或取消收藏
@@ -230,3 +223,29 @@ def rss_collect(content_id: Optional[int] = None):
     }
     model.save(commit=True)
     return response_succ(body=result, toast=toast)
+
+
+def setup_blueprint(api: Blueprint):
+    # 添加一个订阅源
+    api.add_url_rule("/add", view_func=add_rss_source, methods=["POST"])
+    # 试移除一个订阅源
+    api.add_url_rule("/remove", view_func=remove, methods=["POST"])
+    # 查看订阅源列表
+    api.add_url_rule("/limit", view_func=rss_list, methods=["GET"])
+    # 订阅内容的列表
+    api.add_url_rule("/content/limit", view_func=content_limit, methods=["GET"])
+    # 添加阅读记录
+    api.add_url_rule(
+        "/content/reading/<int:content_id>",
+        view_func=rss_content_read,
+        methods=["POST"],
+    )
+    # 收藏内容或取消收藏
+    api.add_url_rule(
+        "/content/toggleCollect/<int:content_id>",
+        view_func=rss_collect,
+        methods=["POST"],
+    )
+
+
+setup_blueprint(api)

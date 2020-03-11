@@ -25,7 +25,6 @@ def upload_folder():
     return UPLOAD_FOLDER
 
 
-@api.route("/files/", methods=["GET"])
 @login_require
 @pages_info_requires
 def file_list():
@@ -63,7 +62,6 @@ def file_list():
     return response_succ(body=payload)
 
 
-@api.route("/upload/", methods=["POST"])
 @login_require
 def upload():
     params = parse_params(request)
@@ -96,7 +94,7 @@ def upload():
             file_user.append(relationship)
             session.add(relationship)
             session.flush()
-            
+
         session.commit()
         result: List[Dict[str, Any]] = [
             {"file_id": f.file_id, "file_hash": f.file_hash} for f in payload
@@ -107,9 +105,7 @@ def upload():
         return CommonError.get_error(9999)
 
 
-@api.route("/file/<file_idf>/", methods=["GET"])
-# @login_require
-def getfile(file_idf: Union[int, str]):
+def get_file(file_idf: Union[int, str]):
     logger.info(file_idf)
     file: Optional[FileModel] = None
     if not file_idf:
@@ -129,3 +125,13 @@ def getfile(file_idf: Union[int, str]):
     targetfile = ".".join([filehash, extension])
     return send_from_directory(upload_folder(), targetfile)
 
+
+def setup_url_rule(api: Blueprint):
+    api.add_url_rule("/files", view_func=file_list, methods=["GET"])
+    # 上传文件
+    api.add_url_rule("/upload", view_func=upload, methods=["POST"])
+    # 获得文件
+    api.add_url_rule("/file/<file_idf>", view_func=get_file, methods=["GET"])
+
+
+setup_url_rule(api)

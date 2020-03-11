@@ -59,4 +59,8 @@ def dashboard_info():
     return response_succ(body=payload)
 
 
-api.add_url_rule("/info/", view_func=dashboard_info, methods=["GET", "POST"])
+def setup_url_rule(api: Blueprint):
+    api.add_url_rule("/info/", view_func=dashboard_info, methods=["GET", "POST"])
+
+
+setup_url_rule(api)
