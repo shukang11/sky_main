@@ -83,7 +83,7 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
     title = payload["title"] or "无标题"
     subtitle = payload["subtitle"]
     items: Iterable[Dict[str, Any]] = payload["items"]
-    rss: RssModel = RssModel.query.filter(RssModel.rss_link == feed_url).one()
+    rss: RssModel = RssModel.query.filter(RssModel.rss_link == feed_url).first()
     if not rss.rss_title:
         rss.rss_title = title
         rss.version = payload.get("version")

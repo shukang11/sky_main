@@ -149,7 +149,7 @@ def setup_url_rule(api: Blueprint):
     # 筛选待办列表
     api.add_url_rule("/filter/<string:filter>", view_func=filter_todo, methods=["POST"])
     # 撤销结束
-    api.add_url_rule("/undo", methods=["POST"])
+    api.add_url_rule("/undo", view_func=undo_todo, methods=["POST"])
 
 
 setup_url_rule(api)

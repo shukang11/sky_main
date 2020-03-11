@@ -41,7 +41,7 @@ def create_app(env: str = "default") -> Flask:
     app.config.from_object(config_obj)
     config_obj.init_app(app)
     # 插件注册
-    model.init_app(app)
+    model.init_app(app, env)
     views.init_app(app)
     utils.init_app(app)
     # regist_blueprint(app, '')

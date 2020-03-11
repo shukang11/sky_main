@@ -33,6 +33,10 @@ __all__ = [
     "FileUserModel"
 ]
 
-def init_app(app: Flask):
+def init_app(app: Flask, env: str):
     db.init_app(app)
+    if env == "testing":
+        @app.before_first_request
+        def create_all():
+            db.create_all(app=app)
     Migrate(app=app, db=db)
