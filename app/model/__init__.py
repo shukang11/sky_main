@@ -4,6 +4,10 @@
 """
 doc: http://docs.jinkan.org/docs/flask-sqlalchemy/models.html
 """
+from flask import Flask
+from flask_migrate import Migrate
+
+from app.utils import db
 
 from .user import User, LoginRecordModel
 from .todo import TodoModel
@@ -30,3 +34,7 @@ __all__ = [
     "FileUserModel",
     "Article",
 ]
+
+def init_app(app: Flask):
+    db.init_app(app)
+    Migrate(app=app, db=db)

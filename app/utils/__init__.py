@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from flask import Flask
+
 from .errors import CommonError, UserError
 
-from .ext import redisClient, session
-from .ext import migrate_manager
+from .ext import session
 from .ext import db
 from .ext import celery_app
 
@@ -27,3 +28,8 @@ from .verfy import login_option, login_require
 from .verfy import pages_info_requires
 
 from sqlalchemy import text
+
+
+def init_app(app: Flask):
+    from . import ext
+    ext.init_app(app)

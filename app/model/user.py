@@ -86,6 +86,7 @@ class User(db.Model, BaseModel):
             "email": self.email or "",
             "phone": self.mobilephone or "",
             "account_status": self.status or 0,
+            "nickname": self.nickname,
         }
         return payload
 

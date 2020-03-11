@@ -6,10 +6,8 @@ from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require
 from app.model import User, TodoModel
-import app
 
 api = Blueprint("todo", __name__)
-app.fetch_route(api, "/todo")
 
 
 @api.route("/add/", methods=["POST"])

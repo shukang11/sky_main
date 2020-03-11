@@ -11,13 +11,12 @@ from app.utils import (
 )
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
-from app.utils import is_link, get_logger, redisClient
+from app.utils import is_link, get_logger
 from app.model import User, Article
 import app
 
 
 api = Blueprint("blog", __name__)
-app.fetch_route(api, "/blog")
 
 logger = get_logger(__name__)
 
