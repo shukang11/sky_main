@@ -51,7 +51,7 @@ class RssUserModel(db.Model, BaseModel):
         self.user_id = user_id
         self.rss_id = rss_id
         self.rss_user_state = 1
-        self.add_time = add_time
+        self.add_time = add_time or get_unix_time_tuple()
 
 
 class RssContentModel(db.Model, BaseModel):

@@ -7,7 +7,7 @@ from flask import Flask, Blueprint
 
 from app.utils import get_logger
 from app.utils import celery_app
-from . import config
+from . import config, cold_data
 from app import model, views, utils
 
 logger = get_logger(__name__)
@@ -47,4 +47,5 @@ def create_app(env: str = "default") -> Flask:
     # regist_blueprint(app, '')
     # 更新 celery 配置
     celery_app.conf.update(app.config)
+    cold_data.prepare(app)
     return app

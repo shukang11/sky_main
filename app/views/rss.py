@@ -28,7 +28,7 @@ api = Blueprint("rss", __name__)
 logger = get_logger(__name__)
 
 
-@api.route("/add/", methods=["POST"])
+@api.route("/add", methods=["POST"])
 @login_require
 def add_rss_source():
     """ 添加一个订阅源

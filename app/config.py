@@ -7,9 +7,9 @@ class Config:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
     """SQLALCHEMY配置"""
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:12345678@mysql:3306/sky_main")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main")
 
-    REDIS_URI = os.environ.get("REDIS_URI", "redis://redis:6379/")
+    REDIS_URI = os.environ.get("REDIS_URI", "redis://localhost:6379/")
 
     SQLALCHEMY_COMMIT_ON_TEARDOWN = False
     SQLALCHEMY_RECORD_QUERIES = False
