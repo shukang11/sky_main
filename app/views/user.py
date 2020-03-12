@@ -1,10 +1,10 @@
-from typing import Optional, AnyStr, Dict
+from typing import Optional, Dict
 from flask import request, current_app, g, Blueprint
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user
-from app.utils import login_require
+from app.utils import login_require, is_phone, is_email
 from app.model import User, LoginRecordModel
 
 api = Blueprint("user", __name__)
@@ -22,7 +22,7 @@ def register():
     try:
         session.add(user)
         session.commit()
-        payload: Dict[AnyStr, int] = {"user_id": user.id}
+        payload: Dict[str, int] = {"user_id": user.id}
         return response_succ(body=payload)
     except Exception as e:
         return CommonError.get_error(error_code=9999)
@@ -44,13 +44,13 @@ def login():
         record: LoginRecordModel = LoginRecordModel(exsist_user.id, log_ip)
         record.save()
         # update token
-        token: AnyStr = getmd5("-".join([email, password, get_random_num(2)]))
+        token: str = getmd5("-".join([email, password, get_random_num(2)]))
         # 保存到redis中, 设置有效时间为7天
-        cache_key: AnyStr = exsist_user.get_cache_key
+        cache_key: str = exsist_user.get_cache_key
         time: int = 60 * 60 * 24 * 7
         current_app.redisClient.set(cache_key, token, time)
         current_app.redisClient.set(token, cache_key, time)
-        payload: Dict[AnyStr, any] = {"token": token, "user_id": exsist_user.id}
+        payload: Dict[str, any] = {"token": token, "user_id": exsist_user.id}
         return response_succ(body=payload)
     else:
         return UserError.get_error(40203)
@@ -70,7 +70,7 @@ def user_info():
     """
     params = parse_params(request)
     user: User = get_current_user()
-    payload: Dict[AnyStr, any] = user.info_dict
+    payload: Dict[str, Any] = user.info_dict
     return response_succ(body=payload)
 
 
@@ -79,11 +79,26 @@ def modify_user_info():
     params = parse_params(request)
     user: User = get_current_user()
     # 用户昵称
-    nickname = params.get("nickname")
+    nickname =params.get("nickname")
+    phone = params.get("phone")
+    sex = int(params.get("sex"))
+    email = params.get("email")
     if nickname:
         user.nickname = nickname
-    user.save()
-    payload: Dict[AnyStr, any] = user.info_dict
+    if phone:
+        if is_phone(str(phone)):
+            user.mobilephone = phone
+        else: return CommonError.error_toast(msg="手机号码格式错误")
+    if sex:
+        if sex in (1, 0):
+            user.sex = sex
+        else: return CommonError.error_toast(msg="性别设置错误")
+    if email:
+        if is_email(email):
+            user.email = email
+        else: return CommonError.error_toast(msg="邮箱格式错误")
+    user.save(commit=True)
+    payload: Dict[str, Any] = user.info_dict
     return response_succ(body=payload)
 
 
