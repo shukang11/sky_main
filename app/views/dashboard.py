@@ -60,7 +60,7 @@ def dashboard_info():
 
 
 def setup_url_rule(api: Blueprint):
-    api.add_url_rule("/info/", view_func=dashboard_info, methods=["GET", "POST"])
+    api.add_url_rule("/info", view_func=dashboard_info, methods=["GET", "POST"])
 
 
 setup_url_rule(api)

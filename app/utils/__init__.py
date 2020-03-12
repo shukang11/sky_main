@@ -14,7 +14,7 @@ from .ext import NoResultFound, MultipleResultsFound, UnmappedColumnError
 from .helpers import parse_params, get_current_user
 from .helpers import get_logger, get_page_info, PageInfo
 
-from .response import response_error, response_succ
+from .response import response_error, response_succ, page_wrapper
 
 from .strings import get_date_from_time_tuple
 from .strings import get_unix_time_tuple

@@ -5,7 +5,7 @@ from flask import request, Blueprint
 from sqlalchemy import and_, outerjoin
 from app.utils import NoResultFound, MultipleResultsFound
 from app.utils import UserError, CommonError
-from app.utils import response_error, response_succ
+from app.utils import response_error, response_succ, page_wrapper
 from app.utils import (
     get_unix_time_tuple,
     get_date_from_time_tuple,
@@ -110,7 +110,7 @@ def rss_list():
         .limit(pageinfo.limit)
         .all()
     )
-    payload: List[Dict[str, Any]] = []
+    content: List[Dict[str, Any]] = []
     for r in result:
         item = {
             "rss_id": r.rss_id,
@@ -118,8 +118,9 @@ def rss_list():
             "rss_link": r.rss_link,
             "rss_state": int(r.rss_state),
         }
-        payload.append(item)
-    return response_succ(body=payload)
+        content.append(item)
+    # payload = page_wrapper(content, pageinfo.page)
+    return response_succ(body=content)
 
 
 @login_require

@@ -38,9 +38,9 @@ class PageInfo:
     offset: int = 0
 
     def __init__(self, page: int, limit: int):
-        self.pages = page
+        self.page = page
         self.limit = limit
-        self.offset = page * limit
+        self.offset = (page - 1) * limit
 
 
 def get_page_info() -> Optional[PageInfo]:
