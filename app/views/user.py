@@ -3,7 +3,7 @@ from flask import request, current_app, g, Blueprint
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
-from app.utils import session, parse_params, get_current_user
+from app.utils import session, parse_params, get_current_user, redis_client
 from app.utils import login_require, is_phone, is_email
 from app.model import User, LoginRecordModel
 
@@ -48,8 +48,8 @@ def login():
         # 保存到redis中, 设置有效时间为7天
         cache_key: str = exsist_user.get_cache_key
         time: int = 60 * 60 * 24 * 7
-        current_app.redisClient.set(cache_key, token, time)
-        current_app.redisClient.set(token, cache_key, time)
+        redis_client.set(cache_key, token, time)
+        redis_client.set(token, cache_key, time)
         payload: Dict[str, any] = {"token": token, "user_id": exsist_user.id}
         return response_succ(body=payload)
     else:
@@ -86,7 +86,7 @@ def modify_user_info():
     if nickname:
         user.nickname = nickname
     if phone:
-        if is_phone(str(phone)):
+        if is_phone(str(phone)) and len(phone) == 11:
             user.mobilephone = phone
         else: return CommonError.error_toast(msg="手机号码格式错误")
     if sex:

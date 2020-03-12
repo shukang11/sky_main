@@ -66,7 +66,7 @@ class TestUser:
         token = get_token(client, email=self._email, password=self._password)
         nickname = "nickname"
         sex  = 1
-        phone = '138599437543'
+        phone = '13859943743'
         rv = client.post("/user/modify_info", json={"nickname": nickname, "phone": phone, "sex": sex}, headers={"token": token})
         print(rv.json)
         assert rv.status_code == 200

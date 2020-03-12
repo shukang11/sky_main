@@ -3,9 +3,10 @@
 from typing import Optional, Callable, AnyStr, Union, Tuple, Dict
 
 from functools import wraps
-from flask import request, Request, session, g, current_app
+from flask import request, Request, session, g
 from app.utils import CommonError, UserError
 from app.utils import parse_params, PageInfo
+from app.utils import redis_client
 from app.model import User
 
 
@@ -65,9 +66,9 @@ def get_user_from_request(
         return CommonError.get_error(40000)
     if not token:
         return None
-    user_id: str = str(current_app.redisClient.get(token) or b"", encoding="utf8")
+    user_id: str = str(redis_client.get(token) or b"", encoding="utf8")
     identifier = user_id.replace("sky_user_cache_key_", "")
-    user: User = User.get_user(identifier=identifier)
+    user: Optional[User] = User.get_user(identifier=identifier)
     return user
 
 
