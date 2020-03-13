@@ -158,7 +158,7 @@ def content_limit():
                 RssContentCollectModel,
                 RssContentCollectModel.content_id == RssContentModel.content_id,
             )
-            .order_by(RssContentModel.published_time.desc())
+            .order_by(RssContentModel.published_time.desc(), RssContentModel.content_title.desc())
             .offset(pageinfo.offset)
             .limit(pageinfo.limit)
             .all()
