@@ -83,7 +83,7 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
     title = payload["title"] or "无标题"
     subtitle = payload["subtitle"]
     items: Iterable[Dict[str, Any]] = payload["items"]
-    rss: RssModel = RssModel.query.filter(RssModel.rss_link == feed_url).one()
+    rss: RssModel = RssModel.query.filter(RssModel.rss_link == feed_url).first()
     if not rss.rss_title:
         rss.rss_title = title
         rss.version = payload.get("version")
@@ -98,7 +98,9 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
             descript: str = ""
             item_title: str = parsed.get("title") or ""
             link = parsed.get("link") or ""
-            cover_img = parsed.get("cover_img") or ""
+            cover_img: str = parsed.get("cover_img") or ""
+            if len(cover_img) > 255:
+                cover_img = ""
             published = parsed.get("published") or ""
             timeLocal = get_unix_time_tuple()
             has: bool = session.query(

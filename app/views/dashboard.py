@@ -9,10 +9,8 @@ from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
 from app.utils import get_logger
 from app.model import User, RssContentModel, RssModel, RssReadRecordModel, RssUserModel
-import app
 
 api = Blueprint("dashboard", __name__)
-app.fetch_route(api, "/dashboard")
 
 logger = get_logger(__name__)
 
@@ -61,4 +59,8 @@ def dashboard_info():
     return response_succ(body=payload)
 
 
-api.add_url_rule("/info/", view_func=dashboard_info, methods=["GET", "POST"])
+def setup_url_rule(api: Blueprint):
+    api.add_url_rule("/info", view_func=dashboard_info, methods=["GET", "POST"])
+
+
+setup_url_rule(api)

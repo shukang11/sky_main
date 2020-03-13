@@ -5,7 +5,8 @@ import random
 import datetime
 import time
 import re
-from typing import Dict, List, Optional, AnyStr
+from .regex import is_emoji
+from typing import Dict, List, Optional
 
 
 def get_unix_time_tuple(
@@ -86,26 +87,6 @@ def get_random_num(digit: int = 6) -> str:
     return result
 
 
-def is_emoji(content: str) -> bool:
-    """ judge str is emoji
-
-    Args: str type 
-
-    Return : Bool type , return True if is Emoji , else False
-    """
-    if not content:
-        return False
-    if u"\U0001F600" <= content and content <= u"\U0001F64F":
-        return True
-    elif u"\U0001F300" <= content and content <= u"\U0001F5FF":
-        return True
-    elif u"\U0001F680" <= content and content <= u"\U0001F6FF":
-        return True
-    elif u"\U0001F1E0" <= content and content <= u"\U0001F1FF":
-        return True
-    else:
-        return False
-
 
 def contain_emoji(content: str) -> bool:
     """ judge str contain emoji str
@@ -143,14 +124,3 @@ def filter_all_img_src(content: str) -> List[str]:
         if imgs:
             img_url_list.append(imgs[0])  # 找到所有的img_url
     return img_url_list
-
-
-def is_link(url: Optional[AnyStr]) -> bool:
-    """  验证是否是一个链接
-    Args:
-        url: 需要验证的字符
-    Return: 如果是合法的链接，返回 True ，否则返回 False
-    """
-    regex = r'(https?)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]'
-    result: Optional[re.Match] = re.match(regex, url)
-    return False if not result else True

@@ -2,17 +2,17 @@
 
 from typing import Optional, Any, Dict, List, Tuple
 from flask import request, Blueprint
-from sqlalchemy import and_, outerjoin
+from sqlalchemy import and_, outerjoin, func
 from app.utils import NoResultFound, MultipleResultsFound
 from app.utils import UserError, CommonError
-from app.utils import response_error, response_succ
+from app.utils import response_error, response_succ, page_wrapper
 from app.utils import (
     get_unix_time_tuple,
     get_date_from_time_tuple,
 )
 from app.utils import session, parse_params, get_current_user
 from app.utils import login_require, pages_info_requires, get_page_info, PageInfo
-from app.utils import is_link, get_logger, redisClient
+from app.utils import is_link, get_logger
 from app.task import rss as RssTask
 from app.model import (
     User,
@@ -22,15 +22,12 @@ from app.model import (
     RssUserModel,
     RssContentCollectModel,
 )
-import app
 
 api = Blueprint("rss", __name__)
-app.fetch_route(api, "/rss")
 
 logger = get_logger(__name__)
 
 
-@api.route("/add/", methods=["POST"])
 @login_require
 def add_rss_source():
     """ 添加一个订阅源
@@ -48,12 +45,11 @@ def add_rss_source():
     # 检查是否存在rss
     try:
         exists_rss: RssModel = RssModel.query.filter(RssModel.rss_link == source).one()
-        if exists_rss:
-            rss_id = exists_rss.rss_id
+        rss_id = exists_rss.rss_id
     except MultipleResultsFound as e:
         # 如果存在多个记录，要抛出
         logger.error(e)
-        return response_error(error_code=9999)
+        return CommonError.get_error(9999)
     except NoResultFound:
         rss = RssModel(source, add_time=get_unix_time_tuple())
         session.add(rss)
@@ -74,7 +70,6 @@ def add_rss_source():
     return response_succ(body=payload)
 
 
-@api.route("/remove/", methods=["POST"])
 @login_require
 def remove():
     """  尝试移除一个订阅源
@@ -97,7 +92,6 @@ def remove():
     return response_succ()
 
 
-@api.route("/limit/", methods=["GET"])
 @login_require
 @pages_info_requires
 def rss_list():
@@ -105,18 +99,17 @@ def rss_list():
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    result = (
+    filter_obj = (
         session.query(RssModel)
         .filter(
             RssModel.rss_id == RssUserModel.rss_id,
             RssUserModel.user_id == user.id,
             RssUserModel.rss_id == RssModel.rss_id,
         )
-        .offset(pageinfo.offset)
-        .limit(pageinfo.limit)
-        .all()
     )
-    payload: List[Dict[str, Any]] = []
+    result = filter_obj.offset(pageinfo.offset).limit(pageinfo.limit).all()
+    # count: int = filter_obj.with_entities(func.count(RssModel.rss_id)).scalar()
+    content: List[Dict[str, Any]] = []
     for r in result:
         item = {
             "rss_id": r.rss_id,
@@ -124,11 +117,11 @@ def rss_list():
             "rss_link": r.rss_link,
             "rss_state": int(r.rss_state),
         }
-        payload.append(item)
-    return response_succ(body=payload)
+        content.append(item)
+    # payload = page_wrapper(content, pageinfo.page, all_page=int(count/pageinfo.limit + 1))
+    return response_succ(body=content)
 
 
-@api.route("/content/limit/", methods=["GET"])
 @login_require
 @pages_info_requires
 def content_limit():
@@ -180,10 +173,10 @@ def content_limit():
                 "content_id": item.cid,
                 "title": item.title or "",
                 "link": item.link,
-                "hover_image": item.image or "",
-                "add_time": get_date_from_time_tuple(item.addDate),
+                "hover_image": item.image,
+                "add_time": item.addDate,
                 "from_site": item.fromsite,
-                "isCollected": item.isCollected,
+                "isCollected": item.isCollected or False,
                 # "rate_value": rate_value,
                 # "is_no_rate": not rate_value,
             }
@@ -191,7 +184,6 @@ def content_limit():
         return response_succ(body=payload)
 
 
-@api.route("/content/reading/<int:content_id>/", methods=["POST"])
 @login_require
 def rss_content_read(content_id: Optional[int] = None):
     """  添加阅读记录
@@ -204,7 +196,6 @@ def rss_content_read(content_id: Optional[int] = None):
     return response_succ()
 
 
-@api.route("/content/toggleCollect/<int:content_id>/", methods=["POST"])
 @login_require
 def rss_collect(content_id: Optional[int] = None):
     """  收藏内容或取消收藏
@@ -232,3 +223,29 @@ def rss_collect(content_id: Optional[int] = None):
     }
     model.save(commit=True)
     return response_succ(body=result, toast=toast)
+
+
+def setup_blueprint(api: Blueprint):
+    # 添加一个订阅源
+    api.add_url_rule("/add", view_func=add_rss_source, methods=["POST"])
+    # 试移除一个订阅源
+    api.add_url_rule("/remove", view_func=remove, methods=["POST"])
+    # 查看订阅源列表
+    api.add_url_rule("/limit", view_func=rss_list, methods=["GET"])
+    # 订阅内容的列表
+    api.add_url_rule("/content/limit", view_func=content_limit, methods=["GET"])
+    # 添加阅读记录
+    api.add_url_rule(
+        "/content/reading/<int:content_id>",
+        view_func=rss_content_read,
+        methods=["POST"],
+    )
+    # 收藏内容或取消收藏
+    api.add_url_rule(
+        "/content/toggleCollect/<int:content_id>",
+        view_func=rss_collect,
+        methods=["POST"],
+    )
+
+
+setup_blueprint(api)

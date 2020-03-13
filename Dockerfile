@@ -9,10 +9,6 @@ ENV LANG C.UTF-8
 
 ENV PIP_INDEX_URL $pypi_mirror
 
-ENV SQLALCHEMY_DATABASE_URI mysql+pymysql://root:12345678@mysql:3306/sky_main
-
-ENV REDIS_URI redis://redis:6379/
-
 ENV FLASK_ENV production
 
 WORKDIR /app

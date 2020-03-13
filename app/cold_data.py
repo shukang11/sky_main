@@ -1,5 +1,8 @@
-from typing import List
 
+from typing import List
+from flask import Flask
+from app.model import db, RssModel
+from app.utils import NoResultFound, MultipleResultsFound
 
 RSS_SOURCES: List[str] = [
     "https://rsshub.app/dgtle/whale/category/0",
@@ -108,10 +111,13 @@ RSS_SOURCES: List[str] = [
 ]
 
 
-def insert_rss_source():
-    import requests
-    sources: List[str] = list(set(RSS_SOURCES))
-    target = "http://127.0.0.1:9000/rss/add"
-    for s in sources:
-        r = requests.post(target, data={"token": "8bb01f5cf7256e070f4e225dc94a47e5", "source": s})
-        print(r)
+def prepare(app: Flask):
+    @app.before_first_request
+    def prepare_cold_data():
+        for rss in RSS_SOURCES:
+            try:
+                RssModel.query.filter(RssModel.rss_link == rss).one()
+            except NoResultFound:
+                model = RssModel(rss)
+                db.session.add(model)
+        db.session.commit()

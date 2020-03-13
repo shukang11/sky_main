@@ -3,23 +3,25 @@ services:
     redis:
         image: redis
         restart: always
-        container_name: redis
         ports: 
-            - "6379:6379"
+            - "6379"
+        networks: 
+            - sky_net
 
     mysql:
         image: mysql:5.7
         restart: always
-        container_name: mysql-3306
         volumes: 
-            - skymainsqldata:/var/lib/mysql
+            - sqldata:/var/lib/mysql
         environment: 
             - MYSQL_DATABASE=sky_main
             - MYSQL_ROOT_PASSWORD=12345678
             - MYSQL_USER=root
             - MYSQL_PASSWORD=12345678 
         ports: 
-            - "3306:3306"
+            - "3306"
+        networks: 
+            - sky_net
         command: [
             '--character-set-server=utf8mb4',
             '--collation-server=utf8mb4_unicode_ci'
@@ -28,25 +30,52 @@ services:
     celery-worker:
         build: .
         depends_on: 
-            - mysql
             - redis
+            - mysql
+        # links: 
+        #     - 'mysql:mysql'
+        #     - 'redis:redis'
+        networks: 
+            - sky_net
+        env_file: .env
         container_name: celery-worker
         command: 'celery -A celery_worker.app worker --loglevel=info -E'
 
     celery-beat:
         build: .
-        container_name: celery-beat
+        env_file: .env
+        depends_on: 
+            - redis
+        # links: 
+        #     - 'redis:redis'
+        networks: 
+            - sky_net
         command: 'celery beat -A celery_worker'
         
     sky-main:
         build: .
+        env_file: .env
         depends_on: 
             - mysql
             - redis
+        depends_on: 
+            - redis
+            - mysql
+        # links: 
+        #     - 'mysql:mysql'
+        #     - 'redis:redis'
+        networks: 
+            - sky_net
         ports: 
             - "9000:5000"
+        volumes:
+            - disk:/app/disk
         container_name: sky-main
         command: './start_server.sh'
 
 volumes: 
-    skymainsqldata:
+    sqldata:
+    disk:
+
+networks: 
+    sky_net:

@@ -3,25 +3,14 @@ import logging
 
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
-# __HOST__ = "192.168.1.160"
-
-# __HOST__ = "114.55.34.233"
-
-__HOST__ = "localhost"
-
-SQLALCHEMY_DATABASE_URI = os.environ.get(
-    "SQLALCHEMY_DATABASE_URI",
-    "mysql+pymysql://root:12345678@{host}:3306/sky_main".format(host=__HOST__),
-)
-
-REDIS_URI = os.environ.get("REDIS_URI", "redis://{host}:6379/".format(host=__HOST__))
-
-
 class Config:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
     """SQLALCHEMY配置"""
-    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main")
+
+    REDIS_URI = os.environ.get("REDIS_URI", "redis://localhost:6379/")
+
     SQLALCHEMY_COMMIT_ON_TEARDOWN = False
     SQLALCHEMY_RECORD_QUERIES = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -79,19 +68,20 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SERVICE_TOKEN_SUFFIX = "im_token_suffix"
     # 打开数据库语句输出
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
     # 分页数量
     PAGE_LIMIT = 11
 
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "TEST_DATABASE_URL"
-    ) or "sqlite:///" + os.path.join(root_dir, "data-test.sqlite")
+    # SQLALCHEMY_DATABASE_URI = os.environ.get(
+    #     "TEST_DATABASE_URL"
+    # ) or "sqlite:///" + os.path.join(root_dir, "data-test.sqlite")
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:12345678@localhost:3307/sky_main_test"
+    
     WTF_CSRF_ENABLED = False
 
 

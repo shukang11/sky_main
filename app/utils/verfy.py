@@ -5,8 +5,8 @@ from typing import Optional, Callable, AnyStr, Union, Tuple, Dict
 from functools import wraps
 from flask import request, Request, session, g
 from app.utils import CommonError, UserError
-from app.utils import redisClient
 from app.utils import parse_params, PageInfo
+from app.utils import redis_client
 from app.model import User
 
 
@@ -55,17 +55,20 @@ def get_user_from_request(
     Return: 获得的用户实例，如果根据信息无法获得用户实例，则返回 None
     """
     params = parse_params(request)
+    print(params)
     alice: str = "token"
     token: Optional[str] = params.get(alice)
     if not token:
         token = session.get(alice) or request.cookies.get(alice)
+    if not token:
+        token = request.headers.get(alice);
     if not token and is_force:
         return CommonError.get_error(40000)
     if not token:
         return None
-    user_id: str = str(redisClient.get(token) or b"", encoding="utf8")
+    user_id: str = str(redis_client.get(token) or b"", encoding="utf8")
     identifier = user_id.replace("sky_user_cache_key_", "")
-    user: User = User.get_user(identifier=identifier)
+    user: Optional[User] = User.get_user(identifier=identifier)
     return user
 
 
@@ -75,9 +78,9 @@ def pages_info_requires(func):
     @wraps(func)
     def decorator_view(*args, **kwargs):
         params = parse_params(request)
-        pages: int = int(params.get("pages") or 0)
+        pages: int = int(params.get("pages") or 1)
         limit: int = int(params.get("limit") or 11)
-        info: PageInfo = PageInfo(max(pages, 0), max(limit, 1))
+        info: PageInfo = PageInfo(max(pages, 1), max(limit, 1))
         g.pageinfo = info
         return func(*args, **kwargs)
 

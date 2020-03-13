@@ -8,7 +8,7 @@ def __check_request(method: str = "") -> str:
     :param request: 返回的请求地址
     :return: 如果请求的地址为空，则返回空字符串
     """
-    methods: List[str] = ['get', 'post', 'put', 'patch', 'delete', '*']
+    methods: List[str] = ["get", "post", "put", "patch", "delete", "*"]
     request: str = method.lower()
     request = request.strip()
     if len(request) == 0:
@@ -27,7 +27,7 @@ def __error_handler(
     msg: Optional[str] = None,
     code: int = 404,
     request: Optional[str] = None,
-    data: Any = None
+    data: Any = None,
 ) -> Dict[str, Any]:
     """
     将不正确的参数格式化返回
@@ -42,7 +42,7 @@ def __error_handler(
     result["msg"] = msg or ""
     if len(request) > 0:
         result["request"] = request or ""
-    result['data'] = data
+    result["data"] = data
     return result
 
 
@@ -50,7 +50,7 @@ def response_succ(
     body: Union[Dict[str, Any], List[Any]] = {},
     status_code: int = 200,
     header: Optional[Dict] = None,
-    toast: Optional[str] = None
+    toast: Optional[str] = None,
 ) -> Tuple[Dict[str, Any], int, Dict[str, str]]:
     """返回一个成功的报文
     对返回值进行统一的包装，避免有多种返回值格式
@@ -75,11 +75,7 @@ def response_succ(
     if status_code not in success_codes:
         raise ValueError("statusCode is not in successCodes")
     try:
-        result: Dict[str, Any] = {
-            "data": body,
-            "msg": toast or "",
-            "code": status_code
-        }
+        result: Dict[str, Any] = {"data": body, "msg": toast or "", "code": status_code}
         if result:
             result = jsonify(result)
     except Exception as _:
@@ -87,9 +83,9 @@ def response_succ(
     if header is None:
         header = {
             # 'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': '*'
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
         }
     return result, status_code, header
 
@@ -98,7 +94,7 @@ def response_error(
     error_code: int = 0,
     msg: str = None,
     http_code: int = 0,
-    header: Optional[Dict] = None
+    header: Optional[Dict] = None,
 ) -> Tuple[str, int, Dict[str, str]]:
     """  对一个返回错误包装
     包装格式，保持统一
@@ -120,6 +116,7 @@ def response_error(
     :return: 返回一个响应
     """
     from flask import request as r
+
     error_codes = [400, 401, 402, 403, 404, 406, 410, 500]
     if msg is None:
         raise ValueError("error Msg can't be None")
@@ -127,12 +124,24 @@ def response_error(
         raise ValueError("error and successCode can't both exists")
     if header is None:
         header = {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Method': '*'
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Method": "*",
         }
-    data = __error_handler(msg=msg,
-                           code=error_code,
-                           request="{0} {1}".format(r.method, r.path))
+    data = __error_handler(
+        msg=msg, code=error_code, request="{0} {1}".format(r.method, r.path)
+    )
 
     return jsonify(data) or jsonify({"error": "cant jsonify"}), http_code, header
+
+
+def page_wrapper(
+    content: List[Any], current: int, all_page: Optional[int] = None
+) -> Dict[str, Any]:
+    payload = {
+        'content': content,
+        'current': current,
+    }
+    if all_page:
+        payload.setdefault('all_page', all_page)
+    return payload
