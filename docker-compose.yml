@@ -12,7 +12,7 @@ services:
         image: mysql:5.7
         restart: always
         volumes: 
-            - sqldata:/var/lib/mysql
+            - ~/sql/data:/var/lib/mysql
         environment: 
             - MYSQL_DATABASE=sky_main
             - MYSQL_ROOT_PASSWORD=12345678

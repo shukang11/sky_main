@@ -1,6 +1,6 @@
 from typing import Optional, Dict
 from flask import request, current_app, g, Blueprint
-from app.utils import UserError, CommonError
+from app.utils import UserError, CommonError, NoResultFound, MultipleResultsFound
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user, redis_client
@@ -34,11 +34,10 @@ def login():
     password: Optional[str] = params.get("password")
     if not email or not password:
         return CommonError.get_error(error_code=40000)
-    exsist_user: User = session.query(User).filter_by(
-        email=email, password=password
-    ).one()
-    if exsist_user:
-        # update log time
+    try:
+        exsist_user: User = session.query(User).filter_by(
+            email=email, password=password
+        ).one()
         login_time: str = get_unix_time_tuple()
         log_ip: str = request.args.get("user_ip") or request.remote_addr
         record: LoginRecordModel = LoginRecordModel(exsist_user.id, log_ip)
@@ -52,8 +51,11 @@ def login():
         redis_client.set(token, cache_key, time)
         payload: Dict[str, any] = {"token": token, "user_id": exsist_user.id}
         return response_succ(body=payload)
-    else:
+    except NoResultFound:
         return UserError.get_error(40203)
+    except:
+        return CommonError.get_error(9999)
+    
 
 
 def logout():

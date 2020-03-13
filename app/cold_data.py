@@ -120,4 +120,6 @@ def prepare(app: Flask):
             except NoResultFound:
                 model = RssModel(rss)
                 db.session.add(model)
+            except MultipleResultsFound:
+                continue
         db.session.commit()
