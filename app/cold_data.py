@@ -2,6 +2,7 @@
 from typing import List
 from flask import Flask
 from app.model import db, RssModel
+from app.utils import NoResultFound, MultipleResultsFound
 
 RSS_SOURCES: List[str] = [
     "https://rsshub.app/dgtle/whale/category/0",
@@ -114,6 +115,9 @@ def prepare(app: Flask):
     @app.before_first_request
     def prepare_cold_data():
         for rss in RSS_SOURCES:
-            model = RssModel(rss)
-            db.session.add(model)
+            try:
+                RssModel.query.filter(RssModel.rss_link == rss).one()
+            except NoResultFound:
+                model = RssModel(rss)
+                db.session.add(model)
         db.session.commit()

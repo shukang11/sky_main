@@ -1,32 +1,21 @@
 import sys
 from os import path
 import json
-from flask import Flask
 import pytest
-from .helper import get_token
-from app import create_app
+import random
+from flask import Flask
+from .helper import *
 
 # 将路径添加到 sys.path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-
-
-@pytest.fixture(scope="module")
-def app():
-    app = create_app("testing")
-    yield app
-
-
-@pytest.fixture(scope="module")
-def client(app):
-    return app.test_client()
 
 
 class TestUser:
     def setup_method(self):
         from app.utils import getmd5
 
-        self._email = "123456789@qq.com"
-        self._password = getmd5("123456")
+        self._email = DEFAULT_LOGIN_PARAMS.get("email")
+        self._password = DEFAULT_LOGIN_PARAMS.get("password")
 
     def test_register_on_error(self, client):
         password: str = self._password
@@ -53,18 +42,17 @@ class TestUser:
         assert body.get("token") != None
 
     def test_info(self, client):
-        token = get_token(client, email=self._email, password=self._password)
+        token = get_token(client, DEFAULT_LOGIN_PARAMS)
         rv = client.get("/user/info", headers={"token": token})
         assert rv.status_code == 200
         body = rv.json["data"]
         assert body.get("email") == self._email
         assert body.get("account_status") == 1
-        assert body.get("user_id") == 1
-        assert body.get("nickname") == None
+        assert body.get("user_id") != 0
 
     def test_change_info(self, client):
-        token = get_token(client, email=self._email, password=self._password)
-        nickname = "nickname"
+        token = get_token(client, DEFAULT_LOGIN_PARAMS)
+        nickname = random.choice(["测试1", "测试2", "测试3", "测试4"])
         sex  = 1
         phone = '13859943743'
         rv = client.post("/user/modify_info", json={"nickname": nickname, "phone": phone, "sex": sex}, headers={"token": token})

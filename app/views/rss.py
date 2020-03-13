@@ -2,7 +2,7 @@
 
 from typing import Optional, Any, Dict, List, Tuple
 from flask import request, Blueprint
-from sqlalchemy import and_, outerjoin
+from sqlalchemy import and_, outerjoin, func
 from app.utils import NoResultFound, MultipleResultsFound
 from app.utils import UserError, CommonError
 from app.utils import response_error, response_succ, page_wrapper
@@ -49,7 +49,7 @@ def add_rss_source():
     except MultipleResultsFound as e:
         # 如果存在多个记录，要抛出
         logger.error(e)
-        return response_error(error_code=9999)
+        return CommonError.get_error(9999)
     except NoResultFound:
         rss = RssModel(source, add_time=get_unix_time_tuple())
         session.add(rss)
@@ -99,17 +99,16 @@ def rss_list():
     params = parse_params(request)
     user: User = get_current_user()
     pageinfo: PageInfo = get_page_info()
-    result = (
+    filter_obj = (
         session.query(RssModel)
         .filter(
             RssModel.rss_id == RssUserModel.rss_id,
             RssUserModel.user_id == user.id,
             RssUserModel.rss_id == RssModel.rss_id,
         )
-        .offset(pageinfo.offset)
-        .limit(pageinfo.limit)
-        .all()
     )
+    result = filter_obj.offset(pageinfo.offset).limit(pageinfo.limit).all()
+    # count: int = filter_obj.with_entities(func.count(RssModel.rss_id)).scalar()
     content: List[Dict[str, Any]] = []
     for r in result:
         item = {
@@ -119,7 +118,7 @@ def rss_list():
             "rss_state": int(r.rss_state),
         }
         content.append(item)
-    # payload = page_wrapper(content, pageinfo.page)
+    # payload = page_wrapper(content, pageinfo.page, all_page=int(count/pageinfo.limit + 1))
     return response_succ(body=content)
 
 
@@ -174,10 +173,10 @@ def content_limit():
                 "content_id": item.cid,
                 "title": item.title or "",
                 "link": item.link,
-                "hover_image": item.image or "",
-                "add_time": get_date_from_time_tuple(item.addDate),
+                "hover_image": item.image,
+                "add_time": item.addDate,
                 "from_site": item.fromsite,
-                "isCollected": item.isCollected,
+                "isCollected": item.isCollected or False,
                 # "rate_value": rate_value,
                 # "is_no_rate": not rate_value,
             }

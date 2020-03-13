@@ -98,7 +98,9 @@ def save_feed_items(feed_url: str, payload: Optional[Dict[str, Any]]) -> bool:
             descript: str = ""
             item_title: str = parsed.get("title") or ""
             link = parsed.get("link") or ""
-            cover_img = parsed.get("cover_img") or ""
+            cover_img: str = parsed.get("cover_img") or ""
+            if len(cover_img) > 255:
+                cover_img = ""
             published = parsed.get("published") or ""
             timeLocal = get_unix_time_tuple()
             has: bool = session.query(
