@@ -8,6 +8,7 @@ from .ext import session
 from .ext import db
 from .ext import celery_app
 from .ext import redis_client
+from .ext import mail_client
 
 from .ext import NoResultFound, MultipleResultsFound, UnmappedColumnError
 

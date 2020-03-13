@@ -32,7 +32,8 @@ logger = get_logger(__name__)
 #         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
 
-def create_app(env: str = "default") -> Flask:
+def create_app(env: str="production") -> Flask:
+    print("launch env context: %s" % env)
     app = Flask(__name__)
     app.url_map.strict_slashes = False
     config_obj: Any = config.configInfo[env]

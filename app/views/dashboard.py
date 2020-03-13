@@ -58,9 +58,30 @@ def dashboard_info():
     payload.setdefault("rss_count", rss_count)
     return response_succ(body=payload)
 
-
+def mail_to():
+    import os
+    from app.utils import mail_client
+    from flask import current_app, render_template
+    from flask_mail import Message
+    from app import create_app
+    with current_app.app_context():
+        message = Message(
+            subject=current_app.config["MAIL_SUBJECT_PREFIX"] + " " + "TEST",
+            sender=current_app.config["MAIL_USERNAME"],
+            recipients=['s804506054@qq.com'],
+        )
+        logger.info(str(current_app.config["MAIL_USERNAME"]))
+        logger.info(str(current_app.config["MAIL_DEBUG"]))
+        # message.body = render_template('mail_content.html' + '.txt', **kwargs)
+        message.html = render_template('mail_content' + '.html')
+        mail_client.send(message)
+    return response_succ(body={"b": 'str(message.body'})
+    
+    
 def setup_url_rule(api: Blueprint):
     api.add_url_rule("/info", view_func=dashboard_info, methods=["GET", "POST"])
+
+    api.add_url_rule("/mail_to", view_func=mail_to, methods=["GET", "POST"])
 
 
 setup_url_rule(api)
