@@ -20,7 +20,7 @@ def parse_rsses():
     rsses: Optional[List[RssModel]] = session.query(RssModel).filter(
         RssModel.rss_state == 1
     ).all()
-    links: List[AnyStr] = [r.rss_link for r in rsses]
+    links: List[AnyStr] = list(set([r.rss_link for r in rsses]))
     result: bool = True
     for link in links:
         payload = parser_feed_root(link)
