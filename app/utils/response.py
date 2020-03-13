@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Optional, Union, List, Any
-from flask import jsonify, Response
+from flask import jsonify, Response, current_app
 
 
 def __check_request(method: str = "") -> str:
@@ -78,7 +78,8 @@ def response_succ(
         result: Dict[str, Any] = {"data": body, "msg": toast or "", "code": status_code}
         if result:
             result = jsonify(result)
-    except Exception as _:
+    except Exception as e:
+        current_app.logger.error(e)
         raise ValueError("Unknown body")
     if header is None:
         header = {
