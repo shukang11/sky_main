@@ -65,7 +65,7 @@ def report():
     subject = "测试的主题"
     recip = "804506054@qq.com"
     html = render_template("rss_report.html", content=get_random_num())
-    taskId = send_email.delay(subject, [recip], html)
+    taskId = send_email.delay(subject=subject, recipients=[recip], html=html)
     return response_succ(body={"content": str(taskId)})
 
 def setup_url_rule(api: Blueprint):
