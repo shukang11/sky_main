@@ -7,9 +7,9 @@ class Config:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
     """SQLALCHEMY配置"""
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:12345678@mysql:3306/sky_main")
 
-    REDIS_URI = os.environ.get("REDIS_URI", "redis://localhost:6379/")
+    REDIS_URI = os.environ.get("REDIS_URI", "redis://redis:6379/")
 
     SQLALCHEMY_COMMIT_ON_TEARDOWN = False
     SQLALCHEMY_RECORD_QUERIES = False
@@ -84,28 +84,61 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    DEBUG = True
-    SERVICE_TOKEN_SUFFIX = "im_token_suffix"
-    
+    # 开启跨站请求伪造防护
+    SECRET_KEY = os.urandom(24)
     """SQLALCHEMY配置"""
     SQLALCHEMY_DATABASE_URI = os.environ.get("DEV_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main")
 
     REDIS_URI = os.environ.get("DEV_REDIS_URI", "redis://localhost:6379/")
-    # 打开数据库语句输出
+
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = False
+    SQLALCHEMY_RECORD_QUERIES = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
-
+    
     """Flask Email 配置"""
-    MAIL_DEBUG = DEBUG             # 开启debug，便于调试看信息
+    MAIL_DEBUG = True             # 开启debug，便于调试看信息
     MAIL_SUPPRESS_SEND = False    # 发送邮件，为True则不发送
+    MAIL_SUBJECT_PREFIX = 'SKY_MAIL' # 邮件的前缀
+    MAIL_SERVER = os.environ.get("MAIL_SERVER") # 邮箱的地址
+    MAIL_PORT = os.environ.get("MAIL_PORT") # 端口
+    MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL") # 是否使用ssl
+    MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS") # 是否使用tls
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME") # 用户名，邮箱
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD") # 密码，授权码
+    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER") # 默认的发送者
 
-    # 分页数量
-    PAGE_LIMIT = 11
+    """Celery 配置"""
+    from datetime import timedelta
+
+    CELERY_RESULT_BACKEND = REDIS_URI
+
+    BROKER_URL = REDIS_URI + "0"
+
+    # 定义定时任务
+    CELERYBEAT_SCHEDULE = {
+        "app.task.beat.report_rss_content": {
+            "task": "app.task.beat.report_rss_content",
+            "schedule": timedelta(seconds=60),
+            "args": (),
+        }
+    }
+    @classmethod
+    def init_app(cls, app, *args, **kwargs):
+        pass
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main")
 
     REDIS_URI = os.environ.get("TEST_REDIS_URI", "redis://localhost:6379/")
+
+    """Celery 配置"""
+    from datetime import timedelta
+
+    CELERY_RESULT_BACKEND = REDIS_URI
+
+    BROKER_URL = REDIS_URI + "0"
     
     WTF_CSRF_ENABLED = False
 
@@ -115,8 +148,8 @@ class ProductionConfig(Config):
 
 
 configInfo = {
-    "development": DevelopmentConfig,
+    "develop": DevelopmentConfig,
     "testing": TestingConfig,
-    "production": ProductionConfig,
+    "product": ProductionConfig,
     "default": DevelopmentConfig,
 }

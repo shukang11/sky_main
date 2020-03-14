@@ -37,6 +37,7 @@ def report_rss_content():
     import datetime
     from sqlalchemy import func
     from flask_mail import Message
+    from flask import render_template
     from .email import send_email
 
     logger.info("汇报今日Rss爬取状况")
@@ -64,13 +65,4 @@ def report_rss_content():
             .with_entities(func.count(RssContentModel.rss_id))
             .scalar()
         )
-        content: str = ""
-        content += "你好, 现汇报rss更新情况"
-        content += "近24小时新增条目：%s" % (str(rss_content_add_count))
-        content += "当前有效的源：%s" % (str(rss_enable_count))
-        content += "总数据数量：%s" % (str(rss_count))
-        message = Message(
-            subject="SKY_MAIN", recipients=["804506054@qq.com"], body=content
-        )
-        send_email("804506054@qq.com", "TEST", "mail_content")
 

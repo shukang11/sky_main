@@ -58,9 +58,20 @@ def dashboard_info():
     payload.setdefault("rss_count", rss_count)
     return response_succ(body=payload)
 
+def report():
+    from app.task.email import send_email
+    from flask import render_template
+    from app.utils import get_random_num
+    subject = "测试的主题"
+    recip = "804506054@qq.com"
+    html = render_template("rss_report.html", content=get_random_num())
+    taskId = send_email.delay(subject, [recip], html)
+    return response_succ(body={"content": str(taskId)})
 
 def setup_url_rule(api: Blueprint):
     api.add_url_rule("/info", view_func=dashboard_info, methods=["GET", "POST"])
+
+    api.add_url_rule("/report", view_func=report, methods=["GET", "POST"])
 
 
 setup_url_rule(api)

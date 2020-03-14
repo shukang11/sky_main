@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os import path, listdir
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Union
 
 from flask import Flask, Blueprint
 
@@ -27,18 +27,18 @@ logger = get_logger(__name__)
 #                 and routes != 'templates' \
 #                 and not routes.startswith('__'):
 #             __import__('app.' + routes)
-    
+
 #     for blueprint in route_list:
 #         app.register_blueprint(blueprint[0], url_prefix=blueprint[1])
 
 
-def create_app(env: str="production") -> Flask:
+def create_app(env: Union[str, None]) -> Flask:
+    if not env or env is not str:
+        env = "product"
     print("launch env context: %s" % env)
     app = Flask(__name__)
     app.url_map.strict_slashes = False
     config_obj: Any = config.configInfo[env]
-    logger.debug(config_obj.SQLALCHEMY_DATABASE_URI)
-    logger.debug(config_obj.REDIS_URI)
     app.config.from_object(config_obj)
     config_obj.init_app(app)
     # 插件注册
@@ -49,4 +49,6 @@ def create_app(env: str="production") -> Flask:
     # 更新 celery 配置
     celery_app.conf.update(app.config)
     cold_data.prepare(app)
+    logger.debug(celery_app.conf["SQLALCHEMY_DATABASE_URI"])
+    logger.debug(celery_app.conf["REDIS_URI"])
     return app
