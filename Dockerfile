@@ -9,7 +9,7 @@ ENV LANG C.UTF-8
 
 ENV PIP_INDEX_URL $pypi_mirror
 
-ENV FLASK_ENV production
+ENV FLASK_ENV product
 
 WORKDIR /app
 
