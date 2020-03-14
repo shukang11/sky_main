@@ -36,7 +36,6 @@ def parse_rsses():
 def report_rss_content():
     import datetime
     from sqlalchemy import func
-    from flask_mail import Message
     from flask import render_template
     from .email import send_email
 
