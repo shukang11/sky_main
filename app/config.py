@@ -3,7 +3,7 @@ import logging
 
 root_dir = os.path.abspath((os.path.dirname(__file__)))
 
-class Config:
+class ConfigBase:
     # 开启跨站请求伪造防护
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
     """SQLALCHEMY配置"""
@@ -83,7 +83,7 @@ class Config:
         pass
 
 
-class DevelopmentConfig(Config):
+class DevelopmentConfig(ConfigBase):
     # 开启跨站请求伪造防护
     SECRET_KEY = os.urandom(24)
     """SQLALCHEMY配置"""
@@ -127,7 +127,7 @@ class DevelopmentConfig(Config):
     def init_app(cls, app, *args, **kwargs):
         pass
 
-class TestingConfig(Config):
+class TestingConfig(ConfigBase):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URI", "mysql+pymysql://root:12345678@localhost:3306/sky_main")
 
@@ -143,7 +143,7 @@ class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
 
 
-class ProductionConfig(Config):
+class ProductionConfig(ConfigBase):
     DEBUG = False
 
 

@@ -33,7 +33,8 @@ logger = get_logger(__name__)
 
 
 def create_app(env: Union[str, None]) -> Flask:
-    if not env or env is not str:
+    if not env or  not isinstance(env, str):
+        print("inner env: %s" % env)
         env = "product"
     print("launch env context: %s" % env)
     app = Flask(__name__)

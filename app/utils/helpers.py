@@ -4,7 +4,7 @@ from typing import Dict, AnyStr, Any, Optional, Type
 import logging
 import sys
 import os
-from app.config import configInfo, Config
+from app.config import configInfo, ConfigBase
 
 """
 Helper functions
@@ -70,18 +70,19 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
         name = __name__
 
     env: str = os.environ.get("FLASK_ENV", "default")
-    config: Any = configInfo.get(env)
+    configObj: Optional[Type[ConfigBase]] = configInfo.get(env)
+    
     has = loggers.get(name)
     if has:
         return has
 
     logger = logging.getLogger(name=name)
-    logger.setLevel(config.LOG_LEVEL)
-
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(config.LOG_LEVEL)
-    formatter = logging.Formatter(config.LOGGING_FORMATTER)
-    stream_handler.setFormatter(formatter)
+    if configObj:
+        logger.setLevel(configObj.LOG_LEVEL)
+        stream_handler.setLevel(configObj.LOG_LEVEL)
+        formatter = logging.Formatter(configObj.LOGGING_FORMATTER)
+        stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
 
     loggers[name] = logger
