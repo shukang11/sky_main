@@ -4,7 +4,7 @@ from app.utils import UserError, CommonError, NoResultFound, MultipleResultsFoun
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
 from app.utils import session, parse_params, get_current_user, get_logger, redis_client
-from app.utils import login_require, is_phone, is_email
+from app.utils import login_require, get_token_from_request, is_phone, is_email
 from app.model import User, LoginRecordModel
 
 api = Blueprint("user", __name__)
@@ -65,9 +65,10 @@ def logout():
     设置redis时间为过期
     """
     params = parse_params(request)
+    token = get_token_from_request(request)
     user: User = get_current_user()
     cache_key: str = user.get_cache_key
-    redis_client.client.delete(cache_key)
+    redis_client.client.delete(cache_key, token)
     return response_succ(body={})
 
 

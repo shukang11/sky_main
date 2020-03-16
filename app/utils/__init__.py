@@ -26,7 +26,7 @@ from .regex import is_emoji
 from .regex import is_link
 from .regex import is_phone, is_email
 
-from .verfy import login_option, login_require
+from .verfy import login_option, login_require, get_token_from_request
 from .verfy import pages_info_requires
 
 from sqlalchemy import text
