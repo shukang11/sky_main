@@ -45,6 +45,16 @@ def login_require(func: Callable):
     return decorator_view
 
 
+def get_token_from_request(request: Request) -> Union[str, None]:
+    params = parse_params(request)
+    alice: str = "token"
+    token: Optional[str] = params.get(alice)
+    if not token:
+        token = session.get(alice) or request.cookies.get(alice)
+    if not token:
+        token = request.headers.get(alice)
+    return token
+
 def get_user_from_request(
     request: Request, is_force: bool
 ) -> Union[Optional[User], Tuple[str, int, Dict[str, str]]]:
@@ -54,19 +64,12 @@ def get_user_from_request(
         is_force: 是否是强制需要用户信息， 如果是强制的，在没有获得用户的时候会返回一个错误报文
     Return: 获得的用户实例，如果根据信息无法获得用户实例，则返回 None
     """
-    params = parse_params(request)
-    print(params)
-    alice: str = "token"
-    token: Optional[str] = params.get(alice)
-    if not token:
-        token = session.get(alice) or request.cookies.get(alice)
-    if not token:
-        token = request.headers.get(alice);
+    token: Optional[str] = get_token_from_request(request)
     if not token and is_force:
-        return CommonError.get_error(40000)
+        return CommonError.get_error(40000)    
     if not token:
         return None
-    user_id: str = str(redis_client.get(token) or b"", encoding="utf8")
+    user_id: str = str(redis_client.client.get(token) or b"", encoding="utf8")
     identifier = user_id.replace("sky_user_cache_key_", "")
     user: Optional[User] = User.get_user(identifier=identifier)
     return user

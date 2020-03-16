@@ -22,8 +22,17 @@
 
 #### docker-compose
 
-> `docker-compose up -d`
+> `docker-compose up --build -d`
 
 如果是树莓派，需要替换 `docker-compose.yml` 中的 `mysql`镜像；
 
 如果端口被占用，可以编辑 `ports` 部分
+
+#### 功能
+
+* 待办事项
+
+* 文件上传
+
+* rss订阅
+

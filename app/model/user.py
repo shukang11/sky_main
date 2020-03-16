@@ -50,7 +50,7 @@ class User(db.Model, BaseModel):
     @classmethod
     def get_user(
         cls, uid: Optional[int] = None, identifier: Optional[str] = None
-    ) -> Optional['User']:
+    ) -> Optional["User"]:
         """  从表中查询用户实例
         Args:
             uid: 用户id

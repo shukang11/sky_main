@@ -3,12 +3,13 @@ from flask import request, current_app, g, Blueprint
 from app.utils import UserError, CommonError, NoResultFound, MultipleResultsFound
 from app.utils import response_error, response_succ
 from app.utils import get_random_num, get_unix_time_tuple, getmd5
-from app.utils import session, parse_params, get_current_user, redis_client
-from app.utils import login_require, is_phone, is_email
+from app.utils import session, parse_params, get_current_user, get_logger, redis_client
+from app.utils import login_require, get_token_from_request, is_phone, is_email
 from app.model import User, LoginRecordModel
 
 api = Blueprint("user", __name__)
 
+logger = get_logger(__name__)
 
 def register():
     params = parse_params(request)
@@ -47,22 +48,28 @@ def login():
         # 保存到redis中, 设置有效时间为7天
         cache_key: str = exsist_user.get_cache_key
         time: int = 60 * 60 * 24 * 7
-        redis_client.set(cache_key, token, time)
-        redis_client.set(token, cache_key, time)
+        redis_client.client.set(cache_key, token, time)
+        redis_client.client.set(token, cache_key, time)
         payload: Dict[str, any] = {"token": token, "user_id": exsist_user.id}
         return response_succ(body=payload)
     except NoResultFound:
         return UserError.get_error(40203)
-    except:
+    except Exception as e:
+        logger.error(e)
         return CommonError.get_error(9999)
     
 
-
+@login_require
 def logout():
     """  登出
     设置redis时间为过期
     """
-    pass
+    params = parse_params(request)
+    token = get_token_from_request(request)
+    user: User = get_current_user()
+    cache_key: str = user.get_cache_key
+    redis_client.client.delete(cache_key, token)
+    return response_succ(body={})
 
 
 @login_require
@@ -103,6 +110,9 @@ def modify_user_info():
     payload: Dict[str, Any] = user.info_dict
     return response_succ(body=payload)
 
+def mail_one_time_code(f: str):
+    pass
+
 
 def setup_url_rule(api: Blueprint):
     # 注册
@@ -113,7 +123,7 @@ def setup_url_rule(api: Blueprint):
     api.add_url_rule("/modify_info", view_func=modify_user_info, methods=["POST"])
     # 获得用户信息
     api.add_url_rule("/info", view_func=user_info, methods=["GET"])
-
+    # 登出
     api.add_url_rule("/logout", view_func=logout, methods=["POST"])
 
 
