@@ -66,7 +66,7 @@ def get_user_from_request(
         return CommonError.get_error(40000)
     if not token:
         return None
-    user_id: str = str(redis_client.get(token) or b"", encoding="utf8")
+    user_id: str = str(redis_client.client.get(token) or b"", encoding="utf8")
     identifier = user_id.replace("sky_user_cache_key_", "")
     user: Optional[User] = User.get_user(identifier=identifier)
     return user

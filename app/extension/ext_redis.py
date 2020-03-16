@@ -1,10 +1,10 @@
 from typing import Optional, Union, Dict, Any
 from flask import Flask
-from redis import Redis, StrictRedis
+from redis import Redis
 
 
 class FlaskRedis:
-    _redis_client: Union[Redis, StrictRedis, None]
+    _redis_client: Redis
     config_key: str
     _provider_kwargs: Dict[str, Any]
     _provider_class: Any
@@ -16,10 +16,9 @@ class FlaskRedis:
         config_key: str = "REDIS_URI",
         **kwargs
     ):
-        self._redis_client = None
         self._config_key = config_key
         self._provider_kwargs = kwargs
-        self._provider_class = StrictRedis if strict else Redis
+        self._provider_class = Redis
         if app:
             self.init_app(app)
 
@@ -33,14 +32,6 @@ class FlaskRedis:
             app.extensions = {}
         app.extensions["redis".lower()] = self
 
-    def __getattr__(self, name):
-        return getattr(self._redis_client, name)
-
-    def __getitem__(self, name):
-        return self._redis_client[name]
-
-    def __setitem__(self, name, value):
-        self._redis_client[name] = value
-
-    def __delitem__(self, name):
-        del self._redis_client[name]
+    @property
+    def client(self) -> Redis:
+        return self._redis_client
