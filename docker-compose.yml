@@ -9,7 +9,7 @@ services:
             - sky_net
 
     mysql:
-        image: mysql:5.7
+        image: mysql
         restart: always
         volumes: 
             - ~/sql/data:/var/lib/mysql
@@ -24,7 +24,8 @@ services:
             - sky_net
         command: [
             '--character-set-server=utf8mb4',
-            '--collation-server=utf8mb4_unicode_ci'
+            '--collation-server=utf8mb4_unicode_ci',
+            '--default-authentication-plugin=mysql_native_password'
         ]
 
     celery-worker:

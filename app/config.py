@@ -94,7 +94,7 @@ class DevelopmentConfig(ConfigBase):
     SQLALCHEMY_COMMIT_ON_TEARDOWN = False
     SQLALCHEMY_RECORD_QUERIES = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ECHO = False
+    SQLALCHEMY_ECHO = True
     
     """Flask Email 配置"""
     MAIL_DEBUG = True             # 开启debug，便于调试看信息
