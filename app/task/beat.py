@@ -64,4 +64,12 @@ def report_rss_content():
             .with_entities(func.count(RssContentModel.rss_id))
             .scalar()
         )
-
+    subject = "测试的主题"
+    recip = "804506054@qq.com"
+    html = render_template(
+        "mail/rss_report.html",
+        today_add_count=rss_content_add_count,
+        rss_enable_count=rss_enable_count,
+        rss_all_count=rss_count,
+    )
+    send_email(subject=subject, recipients=[recip], sender=sender, html=html)

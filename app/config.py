@@ -74,7 +74,7 @@ class ConfigBase:
         },
         "app.task.beat.report_rss_content": {
             "task": "app.task.beat.report_rss_content",
-            "schedule": timedelta(seconds=60),
+            "schedule": timedelta(seconds=60 * 60 * 24),
             "args": (),
         }
     }
@@ -117,11 +117,11 @@ class DevelopmentConfig(ConfigBase):
 
     # 定义定时任务
     CELERYBEAT_SCHEDULE = {
-        "app.task.beat.report_rss_content": {
-            "task": "app.task.beat.report_rss_content",
-            "schedule": timedelta(seconds=60),
-            "args": (),
-        }
+        # "app.task.beat.report_rss_content": {
+        #     "task": "app.task.beat.report_rss_content",
+        #     "schedule": timedelta(seconds=60),
+        #     "args": (),
+        # }
     }
     @classmethod
     def init_app(cls, app, *args, **kwargs):

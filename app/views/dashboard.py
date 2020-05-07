@@ -59,13 +59,8 @@ def dashboard_info():
     return response_succ(body=payload)
 
 def report():
-    from app.task.email import send_email
-    from flask import render_template
-    from app.utils import get_random_num
-    subject = "测试的主题"
-    recip = "804506054@qq.com"
-    html = render_template("rss_report.html", content=get_random_num())
-    taskId = send_email.delay(subject=subject, recipients=[recip], html=html)
+    from app.task.beat import report_rss_content
+    taskId = report_rss_content.delay()
     return response_succ(body={"content": str(taskId)})
 
 def setup_url_rule(api: Blueprint):

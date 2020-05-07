@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 def send_email(
     subject: str,
     recipients: List[str],
-    sender: Union[str] = None,
+    sender: Union[str, None] = None,
     html: Union[None, str] = None,
     body: Union[None, str] = None,
 ):
@@ -28,7 +28,6 @@ def send_email(
     username: str = getattr(config, "MAIL_USERNAME")
     password: str = getattr(config, "MAIL_PASSWORD")
     sender = sender or getattr(config, "MAIL_DEFAULT_SENDER")
-
     mail_client = Mail(
         server, username, password, port, use_ssl, use_tls, sender, None,
     )
