@@ -29,7 +29,7 @@ mypy-extensions==0.4.3
 packaging==19.2
 pathspec==0.6.0
 pluggy==0.13.1
-py==1.8.1
+py==1.10.0
 pycodestyle==2.5.0
 pycparser==2.19
 PyMySQL==0.9.3
